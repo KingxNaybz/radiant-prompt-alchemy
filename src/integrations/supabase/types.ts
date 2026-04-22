@@ -14,10 +14,37 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       paintings: {
         Row: {
           aspect_ratio: string
+          auto_suggested: boolean
+          category_id: string | null
           created_at: string
+          etsy_listing_id: string | null
           external_id: string | null
           final_prompt: string | null
           id: string
@@ -25,16 +52,23 @@ export type Database = {
           is_published: boolean
           model: string | null
           owner_id: string
+          pinterest_pin_id: string | null
           price_cents: number | null
           prompt: string
           provider: string | null
+          source_image_url: string | null
+          status: string
           style: string | null
+          tags: string[] | null
           title: string
           updated_at: string
         }
         Insert: {
           aspect_ratio?: string
+          auto_suggested?: boolean
+          category_id?: string | null
           created_at?: string
+          etsy_listing_id?: string | null
           external_id?: string | null
           final_prompt?: string | null
           id?: string
@@ -42,16 +76,23 @@ export type Database = {
           is_published?: boolean
           model?: string | null
           owner_id: string
+          pinterest_pin_id?: string | null
           price_cents?: number | null
           prompt: string
           provider?: string | null
+          source_image_url?: string | null
+          status?: string
           style?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
         Update: {
           aspect_ratio?: string
+          auto_suggested?: boolean
+          category_id?: string | null
           created_at?: string
+          etsy_listing_id?: string | null
           external_id?: string | null
           final_prompt?: string | null
           id?: string
@@ -59,14 +100,26 @@ export type Database = {
           is_published?: boolean
           model?: string | null
           owner_id?: string
+          pinterest_pin_id?: string | null
           price_cents?: number | null
           prompt?: string
           provider?: string | null
+          source_image_url?: string | null
+          status?: string
           style?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "paintings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

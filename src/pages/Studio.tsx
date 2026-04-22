@@ -65,7 +65,7 @@ interface Painting {
 }
 interface Idea { title: string; prompt: string; style?: string; category_slug?: string; aspect_ratio?: string; }
 
-type Tab = "create" | "remix" | "inspire" | "mass" | "comic" | "pending" | "library" | "marketplace";
+type Tab = "create" | "remix" | "inspire" | "mass" | "comic" | "pending" | "library" | "marketplace" | "suppliers";
 
 function getFunctionErrorMessage(error: unknown, data: unknown) {
   const payloadError = (data as { error?: unknown } | null)?.error;
@@ -143,6 +143,7 @@ export default function Studio() {
               ["pending", `Pending (${pending.length})`],
               ["library", `Library (${approved.length})`],
               ["marketplace", "Marketplace"],
+              ["suppliers", "Suppliers"],
             ] as [Tab, string][]).map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)}
                 className={`eyebrow px-4 py-2 transition-colors ${tab === t ? "bg-ink text-paper" : "hover:bg-secondary"}`}>
@@ -168,6 +169,7 @@ export default function Studio() {
           {tab === "pending" && <PendingTab works={pending} cats={cats} onChange={refresh} />}
           {tab === "library" && <LibraryTab works={approved} cats={cats} onChange={refresh} onCatsChange={refreshCats} />}
           {tab === "marketplace" && <MarketplaceTab works={approved} onChange={refresh} />}
+          {tab === "suppliers" && <SuppliersTab />}
         </div>
       </div>
     </div>
@@ -433,6 +435,7 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
   const [query, setQuery] = useState(""); const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(false); const [generating, setGenerating] = useState<string | null>(null);
   const [batchLoading, setBatchLoading] = useState(false);
+  const [batchPreset, setBatchPreset] = useState<string>("");
 
   const search = async () => {
     if (query.trim().length < 2) return;
@@ -493,7 +496,9 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
   const batchSuggest = async () => {
     setBatchLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("suggest-art", { body: { count: 3 } });
+      const { data, error } = await supabase.functions.invoke("suggest-art", {
+        body: { count: 3, style_preset: batchPreset || undefined },
+      });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success(`${(data as any).created} new suggestions awaiting approval.`);
@@ -506,6 +511,22 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
     <div className="space-y-8">
       <div className="border border-border bg-card p-6">
         <div className="eyebrow text-muted-foreground mb-3">Inspire me</div>
+        <div className="mb-3">
+          <div className="eyebrow text-[0.65rem] text-gold-deep mb-1.5">Bias toward a Crib-style direction (optional)</div>
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => setBatchPreset("")}
+              className={`eyebrow text-[0.65rem] px-2.5 py-1.5 border ${batchPreset === "" ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+              Mixed
+            </button>
+            {STYLE_PRESETS.map((p) => (
+              <button key={p.key} onClick={() => setBatchPreset(p.key)}
+                title={p.blurb}
+                className={`eyebrow text-[0.65rem] px-2.5 py-1.5 border ${batchPreset === p.key ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex gap-3 flex-wrap">
           <button onClick={batchSuggest} disabled={batchLoading}
             className="bg-ink text-paper eyebrow px-5 py-3 hover:bg-gold-deep transition-colors disabled:opacity-60">

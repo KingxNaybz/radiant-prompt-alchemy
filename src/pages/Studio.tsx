@@ -37,6 +37,12 @@ const STYLE_PRESETS: { key: string; label: string; blurb: string; cat?: string }
   { key: "graffiti",         label: "Graffiti",          blurb: "Drips, stencils, gold splatter, raw canvas",  cat: "graffiti" },
   { key: "abstract_ocean",   label: "Abstract Ocean",    blurb: "Aerial seascape, golden molten waves",        cat: "abstract-ocean" },
   { key: "modern_statement", label: "Modern Statement",  blurb: "Bold, ivory + black + gold accents",          cat: "modern-statement" },
+  { key: "high_gloss",       label: "High-Gloss Acrylic",blurb: "Social Culture Art mirror-resin best-seller look" },
+];
+
+const FINISHES: { key: "matte" | "high_gloss"; label: string; blurb: string }[] = [
+  { key: "matte",      label: "Gallery Matte",      blurb: "Classic museum finish (default)" },
+  { key: "high_gloss", label: "High-Gloss Acrylic", blurb: "Mirror-resin, ultra-saturated, Social Culture Art vibe" },
 ];
 
 const COMIC_LAYOUTS = [

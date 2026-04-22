@@ -35,7 +35,7 @@ export default function Studio() {
   const [title, setTitle] = useState("");
   const [style, setStyle] = useState(STYLES[0]);
   const [ratio, setRatio] = useState("1:1");
-  const [provider, setProvider] = useState<"lovable" | "leonardo">("lovable");
+  const [provider, setProvider] = useState<"lovable" | "openart">("lovable");
   const [publish, setPublish] = useState(false);
   const [painting, setPainting] = useState(false);
   const [works, setWorks] = useState<Painting[]>([]);
@@ -166,7 +166,7 @@ export default function Studio() {
                   className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink"
                 >
                   <option value="lovable">Lovable AI (default)</option>
-                  <option value="leonardo">Leonardo (external)</option>
+                  <option value="openart">OpenArt (external)</option>
                 </select>
               </div>
             </div>
@@ -187,9 +187,9 @@ export default function Studio() {
             >
               {painting ? "Naybz is painting…" : "Paint it"}
             </button>
-            {provider === "leonardo" && (
+            {provider === "openart" && (
               <p className="text-xs text-muted-foreground">
-                Requires LEONARDO_API_KEY in Cloud secrets.
+                Using your OpenArt credits via OPENART_API_KEY.
               </p>
             )}
           </div>

@@ -1,5 +1,5 @@
 // Naybz painting engine — calls Lovable AI (Nano Banana 2) by default.
-// Optionally uses an external Leonardo API key if the user has set one.
+// Optionally uses an external OpenArt API key if the user has set one.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {

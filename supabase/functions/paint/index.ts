@@ -139,7 +139,12 @@ Deno.serve(async (req) => {
     const mode = body.mode ?? "create";
     const provider = mode === "remix" ? "lovable" : (body.provider ?? "lovable");
     const aspectRatio = body.aspect_ratio ?? "1:1";
-    const finalPrompt = `${body.prompt}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+    const affirmation = (body.affirmation ?? "").trim();
+    const affStyle = (body.affirmation_style ?? "").trim() || "elegant hand-lettered script in warm metallic gold leaf";
+    const affirmationBlock = affirmation
+      ? `\n\nIntegrate the affirmation text "${affirmation}" as a CREATIVE, ARTISTIC part of the composition — woven into the scene (e.g. painted on a wall, stitched into fabric, glowing in neon, formed by smoke, brushed across the sky, carved into stone). Treat it as fine-art typography in the style of: ${affStyle}. The text must be spelled correctly, legible, beautifully kerned, and feel like it belongs in the painting — not a watermark or sticker. Do not show any other text, captions, or signatures.`
+      : "";
+    const finalPrompt = `${body.prompt}${affirmationBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
 
     // Resolve category
     let categoryId: string | null = body.category_id ?? null;

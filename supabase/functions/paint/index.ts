@@ -189,6 +189,9 @@ Deno.serve(async (req) => {
     const presetBlock = body.style_preset && STYLE_PRESETS[body.style_preset]
       ? `\n\nVisual direction (preset ${body.style_preset}): ${STYLE_PRESETS[body.style_preset]}`
       : "";
+    const finishBlock = body.finish === "high_gloss"
+      ? `\n\nFINISH OVERLAY — render the entire image as a HIGH-GLOSS ACRYLIC / RESIN WALL PRINT: mirror-like glossy surface, crystal-clear acrylic depth, crisp specular highlights catching gallery lighting, ultra-saturated colors, sharp edges, premium luxury wall-art presentation in the spirit of Social Culture Art / Crib of Art best-sellers.`
+      : "";
 
     let finalPrompt: string;
     if (mode === "comic") {
@@ -202,11 +205,11 @@ Deno.serve(async (req) => {
 
 ${layoutBlock}
 
-Story / scene: ${body.prompt}${scriptBlock}${affirmationBlock}${presetBlock}
+Story / scene: ${body.prompt}${scriptBlock}${affirmationBlock}${presetBlock}${finishBlock}
 
 Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be CRISP, correctly spelled, professionally kerned, in classic comic lettering. If no dialogue is given, render the page silent (no text). Aspect ratio ${aspectRatio}, 8K, gallery-print quality, cohesive color palette across all panels.`;
     } else {
-      finalPrompt = `${body.prompt}${presetBlock}${affirmationBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+      finalPrompt = `${body.prompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
     }
 
     let categoryId: string | null = body.category_id ?? null;

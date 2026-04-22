@@ -35,10 +35,13 @@ interface PaintBody {
     | "graffiti"
     | "abstract_ocean"
     | "modern_statement"
-    | "comic_marvel";
+    | "comic_marvel"
+    | "high_gloss";
   // NEW: comic-specific options
   comic_layout?: "single" | "2x2" | "3v" | "splash_2" | "6grid";
   comic_script?: string; // optional: per-panel beats; if omitted we derive from prompt
+  // NEW: finish overlay — applies a high-gloss acrylic / resin print look on top of any style
+  finish?: "matte" | "high_gloss";
 }
 
 const STYLE_PRESETS: Record<string, string> = {
@@ -56,6 +59,8 @@ const STYLE_PRESETS: Record<string, string> = {
     "Bold contemporary statement piece for a luxury living room, oversized scale energy, single striking subject, high-contrast palette of black + ivory + gold accents, layered mixed-media textures, refined gallery composition.",
   comic_marvel:
     "Modern Marvel-realism comic illustration: photoreal anatomy, dramatic rim lighting, painted color rendering (Alex Ross / variant cover quality), subtle ink lines, cinematic composition, hyper-detailed costume textures, atmospheric background, dynamic action pose.",
+  high_gloss:
+    "Social-Culture-Art / Crib-of-Art-style HIGH-GLOSS ACRYLIC PRINT: ultra-saturated photoreal subject (legends, money, cars, sports icons, motivational typography or street-culture motifs) rendered as if printed on thick crystal-clear acrylic with a mirror-like resin finish. Bold isometric / 3D layered depth, crisp drop shadows, neon-on-dark color pops, glossy reflections catching gallery lighting, sharp typographic accents in chrome / gold / iced-out diamond, premium luxury wall-art presentation.",
 };
 
 const COMIC_LAYOUTS: Record<string, string> = {
@@ -184,6 +189,9 @@ Deno.serve(async (req) => {
     const presetBlock = body.style_preset && STYLE_PRESETS[body.style_preset]
       ? `\n\nVisual direction (preset ${body.style_preset}): ${STYLE_PRESETS[body.style_preset]}`
       : "";
+    const finishBlock = body.finish === "high_gloss"
+      ? `\n\nFINISH OVERLAY — render the entire image as a HIGH-GLOSS ACRYLIC / RESIN WALL PRINT: mirror-like glossy surface, crystal-clear acrylic depth, crisp specular highlights catching gallery lighting, ultra-saturated colors, sharp edges, premium luxury wall-art presentation in the spirit of Social Culture Art / Crib of Art best-sellers.`
+      : "";
 
     let finalPrompt: string;
     if (mode === "comic") {
@@ -197,11 +205,11 @@ Deno.serve(async (req) => {
 
 ${layoutBlock}
 
-Story / scene: ${body.prompt}${scriptBlock}${affirmationBlock}${presetBlock}
+Story / scene: ${body.prompt}${scriptBlock}${affirmationBlock}${presetBlock}${finishBlock}
 
 Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be CRISP, correctly spelled, professionally kerned, in classic comic lettering. If no dialogue is given, render the page silent (no text). Aspect ratio ${aspectRatio}, 8K, gallery-print quality, cohesive color palette across all panels.`;
     } else {
-      finalPrompt = `${body.prompt}${presetBlock}${affirmationBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+      finalPrompt = `${body.prompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
     }
 
     let categoryId: string | null = body.category_id ?? null;

@@ -37,6 +37,12 @@ const STYLE_PRESETS: { key: string; label: string; blurb: string; cat?: string }
   { key: "graffiti",         label: "Graffiti",          blurb: "Drips, stencils, gold splatter, raw canvas",  cat: "graffiti" },
   { key: "abstract_ocean",   label: "Abstract Ocean",    blurb: "Aerial seascape, golden molten waves",        cat: "abstract-ocean" },
   { key: "modern_statement", label: "Modern Statement",  blurb: "Bold, ivory + black + gold accents",          cat: "modern-statement" },
+  { key: "high_gloss",       label: "High-Gloss Acrylic",blurb: "Social Culture Art mirror-resin best-seller look" },
+];
+
+const FINISHES: { key: "matte" | "high_gloss"; label: string; blurb: string }[] = [
+  { key: "matte",      label: "Gallery Matte",      blurb: "Classic museum finish (default)" },
+  { key: "high_gloss", label: "High-Gloss Acrylic", blurb: "Mirror-resin, ultra-saturated, Social Culture Art vibe" },
 ];
 
 const COMIC_LAYOUTS = [
@@ -177,6 +183,7 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const [categoryId, setCategoryId] = useState<string>("");
   const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
   const [preset, setPreset] = useState<string>("");
+  const [finish, setFinish] = useState<"matte" | "high_gloss">("matte");
 
   const applyPreset = (key: string) => {
     if (preset === key) { setPreset(""); return; }
@@ -204,6 +211,7 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
           prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create",
           category_id: categoryId || null,
           style_preset: preset || undefined,
+          finish,
           affirmation: affirmation.trim() || undefined,
           affirmation_style: affirmation.trim() ? affStyle : undefined,
         },
@@ -239,6 +247,24 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
           {preset && (
             <p className="text-[0.65rem] text-muted-foreground italic">
               Naybz will fuse your prompt with the <span className="text-ink">{STYLE_PRESETS.find((p) => p.key === preset)?.label}</span> direction.
+            </p>
+          )}
+        </div>
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Finish</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {FINISHES.map((f) => (
+              <button key={f.key} type="button" onClick={() => setFinish(f.key)}
+                title={f.blurb}
+                className={`text-left px-2.5 py-1.5 text-[0.7rem] border transition-colors ${finish === f.key ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+                <div className="eyebrow text-[0.65rem]">{f.label}</div>
+                <div className={`text-[0.6rem] truncate ${finish === f.key ? "text-paper/70" : "text-muted-foreground"}`}>{f.blurb}</div>
+              </button>
+            ))}
+          </div>
+          {finish === "high_gloss" && (
+            <p className="text-[0.65rem] text-muted-foreground italic">
+              Naybz will render the piece with a mirror-like acrylic / resin finish — ultra-saturated, glossy reflections, premium wall-art look.
             </p>
           )}
         </div>

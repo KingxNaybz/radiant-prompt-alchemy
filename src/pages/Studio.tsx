@@ -141,8 +141,9 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const [prompt, setPrompt] = useState(""); const [title, setTitle] = useState("");
   const [style, setStyle] = useState(STYLES[0]); const [ratio, setRatio] = useState("1:1");
   const [provider, setProvider] = useState<"lovable" | "openart">("lovable");
-  const [categoryId, setCategoryId] = useState<string>("");
   const [publish, setPublish] = useState(false); const [loading, setLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
 
   const paint = async () => {
     setError(null);
@@ -155,15 +156,21 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("paint", {
-        body: { prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create", category_id: categoryId || null },
+        body: {
+          prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create",
+          category_id: categoryId || null,
+          affirmation: affirmation.trim() || undefined,
+          affirmation_style: affirmation.trim() ? affStyle : undefined,
+        },
       });
       if (error || (data as any)?.error) {
-        const message = getFunctionErrorMessage(error, data);
-        setError(message);
-        throw new Error(message);
+        const msg = getFunctionErrorMessage(error, data) ?? "Failed to paint.";
+        setError(msg);
+        toast.error(msg);
+        return;
       }
       toast.success("Naybz finished a new piece.");
-      setPrompt(""); setTitle(""); onDone();
+      setPrompt(""); setTitle(""); setAffirmation(""); onDone();
     } catch (e: any) { toast.error(e.message ?? "Failed"); }
     finally { setLoading(false); }
   };

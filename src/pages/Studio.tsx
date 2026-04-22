@@ -176,6 +176,17 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const [publish, setPublish] = useState(false); const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>("");
   const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
+  const [preset, setPreset] = useState<string>("");
+
+  const applyPreset = (key: string) => {
+    if (preset === key) { setPreset(""); return; }
+    setPreset(key);
+    const p = STYLE_PRESETS.find((x) => x.key === key);
+    if (p?.cat) {
+      const cat = cats.find((c) => c.slug === p.cat);
+      if (cat) setCategoryId(cat.id);
+    }
+  };
 
   const paint = async () => {
     setError(null);

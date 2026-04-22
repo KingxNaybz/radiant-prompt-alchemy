@@ -147,8 +147,12 @@ Deno.serve(async (req) => {
         headers: { Authorization: `Bearer ${OPENART_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: finalPrompt, model: modelUsed, width: dims.width, height: dims.height, num_images: 1 }),
       });
-      const createJson = await create.json();
-      if (!create.ok) throw new Error(`OpenArt create failed [${create.status}]: ${JSON.stringify(createJson)}`);
+      const createText = await create.text();
+      let createJson: any;
+      try { createJson = JSON.parse(createText); } catch {
+        throw new Error(`OpenArt does not expose a public REST API for generation — the endpoint returned HTML (status ${create.status}). OpenArt credits can only be used inside openart.ai itself. Switch the Engine to "Lovable AI" to generate from here.`);
+      }
+      if (!create.ok) throw new Error(`OpenArt error [${create.status}]: ${JSON.stringify(createJson)}`);
       const creationId = createJson?.id ?? createJson?.creation_id ?? createJson?.data?.id;
       if (!creationId) throw new Error("OpenArt: no creation id returned");
       externalId = String(creationId);
@@ -157,7 +161,9 @@ Deno.serve(async (req) => {
       for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
         const poll = await fetch(`https://openart.ai/api/v1/text2image/creations/${creationId}`, { headers: { Authorization: `Bearer ${OPENART_API_KEY}` } });
-        const pollJson = await poll.json();
+        const pollText = await poll.text();
+        let pollJson: any;
+        try { pollJson = JSON.parse(pollText); } catch { throw new Error(`OpenArt poll returned non-JSON (${poll.status})`); }
         const status = pollJson?.status ?? pollJson?.data?.status;
         const imgs = pollJson?.image_urls ?? pollJson?.images ?? pollJson?.data?.image_urls ?? pollJson?.data?.images;
         if (imgs && imgs.length > 0) {

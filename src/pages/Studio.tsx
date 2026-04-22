@@ -278,12 +278,17 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("paint", {
-        body: { prompt, title, style, aspect_ratio: ratio, mode: "remix", source_image_url: source, category_id: categoryId || null },
+        body: {
+          prompt, title, style, aspect_ratio: ratio, mode: "remix",
+          source_image_url: source, category_id: categoryId || null,
+          affirmation: affirmation.trim() || undefined,
+          affirmation_style: affirmation.trim() ? affStyle : undefined,
+        },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success("Remix complete.");
-      setPrompt(""); setTitle(""); setFile(null); setSourceUrl(""); onDone();
+      setPrompt(""); setTitle(""); setFile(null); setSourceUrl(""); setAffirmation(""); onDone();
     } catch (e: any) { toast.error(e.message ?? "Failed"); }
     finally { setLoading(false); }
   };

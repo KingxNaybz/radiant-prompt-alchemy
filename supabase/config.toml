@@ -1,1 +1,4 @@
 project_id = "xispoxjjjaevbxstrepr"
+
+[functions.paint]
+verify_jwt = true

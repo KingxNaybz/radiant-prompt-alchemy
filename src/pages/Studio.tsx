@@ -187,6 +187,17 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
       if (cat) setCategoryId(cat.id);
     }
   };
+  const [preset, setPreset] = useState<string>("");
+
+  const applyPreset = (key: string) => {
+    if (preset === key) { setPreset(""); return; }
+    setPreset(key);
+    const p = STYLE_PRESETS.find((x) => x.key === key);
+    if (p?.cat) {
+      const cat = cats.find((c) => c.slug === p.cat);
+      if (cat) setCategoryId(cat.id);
+    }
+  };
 
   const paint = async () => {
     setError(null);

@@ -16,6 +16,18 @@ const STYLES = [
   "Wildlife Macro",
 ];
 const RATIOS = ["1:1", "3:4", "4:3", "16:9", "9:16", "21:9"];
+const AFFIRMATION_STYLES = [
+  "elegant gold-leaf script",
+  "hand-painted brushed serif",
+  "neon glow signage",
+  "graffiti spray-paint",
+  "embroidered thread on velvet",
+  "carved into stone",
+  "smoke and mist lettering",
+  "chrome liquid metal",
+  "vintage tattoo flash",
+  "celestial constellation stars",
+];
 
 interface Category { id: string; slug: string; name: string; sort_order: number; }
 interface Painting {
@@ -141,8 +153,9 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const [prompt, setPrompt] = useState(""); const [title, setTitle] = useState("");
   const [style, setStyle] = useState(STYLES[0]); const [ratio, setRatio] = useState("1:1");
   const [provider, setProvider] = useState<"lovable" | "openart">("lovable");
-  const [categoryId, setCategoryId] = useState<string>("");
   const [publish, setPublish] = useState(false); const [loading, setLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
 
   const paint = async () => {
     setError(null);
@@ -155,15 +168,21 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("paint", {
-        body: { prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create", category_id: categoryId || null },
+        body: {
+          prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create",
+          category_id: categoryId || null,
+          affirmation: affirmation.trim() || undefined,
+          affirmation_style: affirmation.trim() ? affStyle : undefined,
+        },
       });
       if (error || (data as any)?.error) {
-        const message = getFunctionErrorMessage(error, data);
-        setError(message);
-        throw new Error(message);
+        const msg = getFunctionErrorMessage(error, data) ?? "Failed to paint.";
+        setError(msg);
+        toast.error(msg);
+        return;
       }
       toast.success("Naybz finished a new piece.");
-      setPrompt(""); setTitle(""); onDone();
+      setPrompt(""); setTitle(""); setAffirmation(""); onDone();
     } catch (e: any) { toast.error(e.message ?? "Failed"); }
     finally { setLoading(false); }
   };
@@ -204,6 +223,20 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
             OpenArt generation is not available from this Studio yet. Use Lovable AI to paint here.
           </div>
         )}
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Affirmation (optional)</div>
+          <input value={affirmation} onChange={(e) => setAffirmation(e.target.value)}
+            placeholder='e.g. "Stay golden." — woven into the art'
+            className="w-full bg-transparent border-b border-border py-1.5 text-sm focus:outline-none focus:border-ink" />
+          {affirmation.trim() && (
+            <Select label="Lettering style" value={affStyle} onChange={setAffStyle}>
+              {AFFIRMATION_STYLES.map((s) => <option key={s}>{s}</option>)}
+            </Select>
+          )}
+          <p className="text-[0.7rem] text-muted-foreground italic">
+            Naybz will paint these words into the piece — gold leaf, neon, smoke, embroidery — never as a watermark.
+          </p>
+        </div>
         <label className="flex items-center gap-2 text-sm pt-2">
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish to public gallery immediately
@@ -228,6 +261,7 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
   const [style, setStyle] = useState(STYLES[0]); const [ratio, setRatio] = useState("1:1");
   const [categoryId, setCategoryId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
 
   const onFile = (f?: File | null) => {
     if (!f) return;
@@ -244,12 +278,17 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("paint", {
-        body: { prompt, title, style, aspect_ratio: ratio, mode: "remix", source_image_url: source, category_id: categoryId || null },
+        body: {
+          prompt, title, style, aspect_ratio: ratio, mode: "remix",
+          source_image_url: source, category_id: categoryId || null,
+          affirmation: affirmation.trim() || undefined,
+          affirmation_style: affirmation.trim() ? affStyle : undefined,
+        },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success("Remix complete.");
-      setPrompt(""); setTitle(""); setFile(null); setSourceUrl(""); onDone();
+      setPrompt(""); setTitle(""); setFile(null); setSourceUrl(""); setAffirmation(""); onDone();
     } catch (e: any) { toast.error(e.message ?? "Failed"); }
     finally { setLoading(false); }
   };
@@ -282,6 +321,17 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
           <Select label="Format" value={ratio} onChange={setRatio}>
             {RATIOS.map((r) => <option key={r}>{r}</option>)}
           </Select>
+        </div>
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Affirmation (optional)</div>
+          <input value={affirmation} onChange={(e) => setAffirmation(e.target.value)}
+            placeholder='e.g. "She is the storm." — painted into the scene'
+            className="w-full bg-transparent border-b border-border py-1.5 text-sm focus:outline-none focus:border-ink" />
+          {affirmation.trim() && (
+            <Select label="Lettering style" value={affStyle} onChange={setAffStyle}>
+              {AFFIRMATION_STYLES.map((s) => <option key={s}>{s}</option>)}
+            </Select>
+          )}
         </div>
         <button onClick={remix} disabled={loading}
           className="w-full bg-ink text-paper eyebrow py-3.5 hover:bg-gold-deep transition-colors disabled:opacity-60">

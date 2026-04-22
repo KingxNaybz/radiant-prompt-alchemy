@@ -16,6 +16,18 @@ const STYLES = [
   "Wildlife Macro",
 ];
 const RATIOS = ["1:1", "3:4", "4:3", "16:9", "9:16", "21:9"];
+const AFFIRMATION_STYLES = [
+  "elegant gold-leaf script",
+  "hand-painted brushed serif",
+  "neon glow signage",
+  "graffiti spray-paint",
+  "embroidered thread on velvet",
+  "carved into stone",
+  "smoke and mist lettering",
+  "chrome liquid metal",
+  "vintage tattoo flash",
+  "celestial constellation stars",
+];
 
 interface Category { id: string; slug: string; name: string; sort_order: number; }
 interface Painting {

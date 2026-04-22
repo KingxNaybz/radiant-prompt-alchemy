@@ -386,6 +386,33 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
     finally { setGenerating(null); }
   };
 
+  const paintAllIdeas = async () => {
+    if (ideas.length === 0) return;
+    setGenerating("__all__");
+    let ok = 0;
+    for (const idea of ideas) {
+      try {
+        const { data, error } = await supabase.functions.invoke("paint", {
+          body: {
+            prompt: idea.prompt, title: idea.title, style: idea.style,
+            aspect_ratio: idea.aspect_ratio ?? "1:1", mode: "create",
+            category_slug: idea.category_slug,
+          },
+        });
+        if (error || (data as any)?.error) {
+          toast.error(`${idea.title}: ${getFunctionErrorMessage(error, data)}`);
+          continue;
+        }
+        ok++;
+        onDone();
+      } catch (e: any) {
+        toast.error(`${idea.title}: ${e.message ?? "Failed"}`);
+      }
+    }
+    toast.success(`Painted ${ok}/${ideas.length} ideas.`);
+    setGenerating(null);
+  };
+
   const batchSuggest = async () => {
     setBatchLoading(true);
     try {

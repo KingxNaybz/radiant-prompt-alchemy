@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json().catch(() => ({}))) as SuggestBody;
-    const count = Math.min(Math.max(body.count ?? 3, 1), 5);
+    const count = Math.min(Math.max(body.count ?? 3, 1), 20);
 
     // Pull categories
     const { data: cats } = await admin.from("categories").select("id, slug, name");

@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
       if (!body.source_image_url) throw new Error("source_image_url required for remix");
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
       modelUsed = body.model ?? "google/gemini-3.1-flash-image-preview";
-      const sourceDataUrl = await fetchAsDataUrl(body.source_image_url);
+      const sourceDataUrl = await fetchAsDataUrl(body.source_image_url, admin);
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },

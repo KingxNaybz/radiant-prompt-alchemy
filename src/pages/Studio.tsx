@@ -29,6 +29,24 @@ const AFFIRMATION_STYLES = [
   "celestial constellation stars",
 ];
 
+// Crib-of-Art-inspired one-click style presets
+const STYLE_PRESETS: { key: string; label: string; blurb: string; cat?: string }[] = [
+  { key: "african_royalty",  label: "African Royalty",   blurb: "Beaded headwraps, gold leaf, regal portrait", cat: "african-royalty" },
+  { key: "chrome_metallic",  label: "Chrome & Metallic", blurb: "Liquid chrome waves, brushed gold impasto",   cat: "chrome-metallic" },
+  { key: "motivational",     label: "Motivational",      blurb: "Affirmation words painted into the figure",   cat: "motivational" },
+  { key: "graffiti",         label: "Graffiti",          blurb: "Drips, stencils, gold splatter, raw canvas",  cat: "graffiti" },
+  { key: "abstract_ocean",   label: "Abstract Ocean",    blurb: "Aerial seascape, golden molten waves",        cat: "abstract-ocean" },
+  { key: "modern_statement", label: "Modern Statement",  blurb: "Bold, ivory + black + gold accents",          cat: "modern-statement" },
+];
+
+const COMIC_LAYOUTS = [
+  { key: "single",    label: "Single splash" },
+  { key: "2x2",       label: "2 × 2 grid" },
+  { key: "3v",        label: "3 panels (vertical)" },
+  { key: "splash_2",  label: "Splash + 2" },
+  { key: "6grid",     label: "6-panel grid" },
+];
+
 interface Category { id: string; slug: string; name: string; sort_order: number; }
 interface Painting {
   id: string; title: string; prompt: string; style: string | null;
@@ -41,7 +59,7 @@ interface Painting {
 }
 interface Idea { title: string; prompt: string; style?: string; category_slug?: string; aspect_ratio?: string; }
 
-type Tab = "create" | "remix" | "inspire" | "mass" | "pending" | "library" | "marketplace";
+type Tab = "create" | "remix" | "inspire" | "mass" | "comic" | "pending" | "library" | "marketplace";
 
 function getFunctionErrorMessage(error: unknown, data: unknown) {
   const payloadError = (data as { error?: unknown } | null)?.error;
@@ -115,6 +133,7 @@ export default function Studio() {
               ["remix", "Remix"],
               ["inspire", "Inspire"],
               ["mass", "Mass Produce"],
+              ["comic", "Comic"],
               ["pending", `Pending (${pending.length})`],
               ["library", `Library (${approved.length})`],
               ["marketplace", "Marketplace"],
@@ -139,6 +158,7 @@ export default function Studio() {
           {tab === "remix" && <RemixTab cats={cats} onDone={refresh} setError={setErrorBanner} />}
           {tab === "inspire" && <InspireTab cats={cats} onDone={refresh} />}
           {tab === "mass" && <MassProduceTab cats={cats} onDone={refresh} />}
+          {tab === "comic" && <ComicTab cats={cats} onDone={refresh} setError={setErrorBanner} />}
           {tab === "pending" && <PendingTab works={pending} cats={cats} onChange={refresh} />}
           {tab === "library" && <LibraryTab works={approved} cats={cats} onChange={refresh} onCatsChange={refreshCats} />}
           {tab === "marketplace" && <MarketplaceTab works={approved} onChange={refresh} />}
@@ -156,6 +176,18 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const [publish, setPublish] = useState(false); const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>("");
   const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
+  const [preset, setPreset] = useState<string>("");
+
+  const applyPreset = (key: string) => {
+    if (preset === key) { setPreset(""); return; }
+    setPreset(key);
+    const p = STYLE_PRESETS.find((x) => x.key === key);
+    if (p?.cat) {
+      const cat = cats.find((c) => c.slug === p.cat);
+      if (cat) setCategoryId(cat.id);
+    }
+  };
+
 
   const paint = async () => {
     setError(null);
@@ -171,6 +203,7 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
         body: {
           prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create",
           category_id: categoryId || null,
+          style_preset: preset || undefined,
           affirmation: affirmation.trim() || undefined,
           affirmation_style: affirmation.trim() ? affStyle : undefined,
         },
@@ -191,6 +224,24 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
     <div className="grid lg:grid-cols-12 gap-8">
       <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
         <div className="eyebrow text-muted-foreground">New original</div>
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Crib-style presets (one click)</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {STYLE_PRESETS.map((p) => (
+              <button key={p.key} type="button" onClick={() => applyPreset(p.key)}
+                title={p.blurb}
+                className={`text-left px-2.5 py-1.5 text-[0.7rem] border transition-colors ${preset === p.key ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+                <div className="eyebrow text-[0.65rem]">{p.label}</div>
+                <div className={`text-[0.6rem] truncate ${preset === p.key ? "text-paper/70" : "text-muted-foreground"}`}>{p.blurb}</div>
+              </button>
+            ))}
+          </div>
+          {preset && (
+            <p className="text-[0.65rem] text-muted-foreground italic">
+              Naybz will fuse your prompt with the <span className="text-ink">{STYLE_PRESETS.find((p) => p.key === preset)?.label}</span> direction.
+            </p>
+          )}
+        </div>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (optional)"
           className="w-full bg-transparent border-b border-border py-2 focus:outline-none focus:border-ink font-serif text-lg" />
         <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6}
@@ -835,5 +886,102 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
       className={`eyebrow text-xs px-3 py-1.5 transition-colors ${active ? "bg-ink text-paper" : "border border-border hover:border-ink"}`}>
       {children}
     </button>
+  );
+}
+
+/* ---------------- COMIC ---------------- */
+function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => void; setError: (e: string | null) => void; }) {
+  const [title, setTitle] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [script, setScript] = useState("");
+  const [layout, setLayout] = useState<string>("2x2");
+  const [ratio, setRatio] = useState("3:4");
+  const [publish, setPublish] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState<string>(() => cats.find((c) => c.slug === "comics")?.id ?? "");
+
+  useEffect(() => {
+    if (!categoryId) {
+      const c = cats.find((cc) => cc.slug === "comics");
+      if (c) setCategoryId(c.id);
+    }
+  }, [cats, categoryId]);
+
+  const generate = async () => {
+    setError(null);
+    if (prompt.trim().length < 5) return toast.error("Describe the scene or story.");
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("paint", {
+        body: {
+          mode: "comic",
+          prompt, title,
+          aspect_ratio: ratio,
+          publish,
+          category_id: categoryId || null,
+          comic_layout: layout,
+          comic_script: script.trim() || undefined,
+          style_preset: "comic_marvel",
+        },
+      });
+      if (error || (data as { error?: string } | null)?.error) {
+        const msg = getFunctionErrorMessage(error, data) ?? "Failed to draw the comic.";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      toast.success("Comic page rendered.");
+      setPrompt(""); setTitle(""); setScript("");
+      onDone();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      toast.error(msg);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-8">
+      <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
+        <div className="eyebrow text-muted-foreground">Realistic Comic Page</div>
+        <p className="text-xs text-muted-foreground">
+          Modern Marvel-realism: photoreal anatomy, cinematic lighting, painted color, subtle ink. Pick a layout, write a story or per-panel beats, and Naybz renders the full page in one image.
+        </p>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Page title (optional)"
+          className="w-full bg-transparent border-b border-border py-2 focus:outline-none focus:border-ink font-serif text-lg" />
+        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3}
+          placeholder="Overall scene / synopsis — e.g. A hooded vigilante chases an escaped tech-thief across a neon-lit Tokyo rooftop at midnight."
+          className="w-full bg-transparent border border-border p-3 text-sm focus:outline-none focus:border-ink resize-none" />
+        <textarea value={script} onChange={(e) => setScript(e.target.value)} rows={6}
+          placeholder={"Optional per-panel script. Example for 2×2:\nPanel 1: Wide — vigilante crouched on a rooftop, rain falling. Caption: \"Tokyo. 03:14.\"\nPanel 2: Close-up — thief glances back. SFX: TUMP TUMP.\nPanel 3: Action — vigilante leaps the gap. Dialogue (vigilante): \"End of the line.\"\nPanel 4: Splash — collision mid-air, lightning behind them."}
+          className="w-full bg-transparent border border-border p-3 text-xs font-mono focus:outline-none focus:border-ink resize-none" />
+        <div className="grid grid-cols-2 gap-3">
+          <Select label="Layout" value={layout} onChange={setLayout}>
+            {COMIC_LAYOUTS.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+          </Select>
+          <Select label="Format" value={ratio} onChange={setRatio}>
+            {RATIOS.map((r) => <option key={r}>{r}</option>)}
+          </Select>
+          <Select label="Category" value={categoryId} onChange={setCategoryId}>
+            <option value="">Uncategorized</option>
+            {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </Select>
+        </div>
+        <label className="flex items-center gap-2 text-sm pt-2">
+          <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
+          Publish to public gallery immediately
+        </label>
+        <button onClick={generate} disabled={loading}
+          className="w-full bg-ink text-paper eyebrow py-3.5 hover:bg-gold-deep transition-colors disabled:opacity-60">
+          {loading ? "Naybz is inking the page…" : "Render comic page"}
+        </button>
+        <p className="text-[0.65rem] text-muted-foreground italic border-t border-border pt-2">
+          Tip: comic pages use a higher-fidelity image model — render time can be 30–90 seconds per page.
+        </p>
+      </div>
+      <div className="lg:col-span-7 border border-dashed border-border p-12 text-center text-muted-foreground self-start">
+        <p className="font-serif italic text-2xl">Your comic page appears here.</p>
+        <p className="mt-2 text-sm">Single splash, 2×2, 3-panel, splash + 2, or full 6-panel grid — your call.</p>
+      </div>
+    </div>
   );
 }

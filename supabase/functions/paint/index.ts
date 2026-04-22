@@ -3,6 +3,7 @@
 //   - "create": text-to-image via Lovable AI (default) or OpenArt
 //   - "remix":  edit/transform an existing source image (URL or data URL) via Lovable AI
 //   - "suggest": same as create but stored with status="pending_approval", auto_suggested=true
+//   - "comic":  multi-panel comic page (or single comic illustration) via Lovable AI
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -19,14 +20,56 @@ interface PaintBody {
   provider?: "lovable" | "openart";
   model?: string;
   publish?: boolean;
-  mode?: "create" | "remix" | "suggest";
-  source_image_url?: string; // http(s) URL or data:image/...
+  mode?: "create" | "remix" | "suggest" | "comic";
+  source_image_url?: string;
   category_id?: string | null;
   category_slug?: string | null;
   tags?: string[];
   affirmation?: string;
-  affirmation_style?: string; // e.g. "gold leaf script", "neon", "graffiti"
+  affirmation_style?: string;
+  // NEW: Crib-of-Art-inspired one-click style presets
+  style_preset?:
+    | "african_royalty"
+    | "chrome_metallic"
+    | "motivational"
+    | "graffiti"
+    | "abstract_ocean"
+    | "modern_statement"
+    | "comic_marvel";
+  // NEW: comic-specific options
+  comic_layout?: "single" | "2x2" | "3v" | "splash_2" | "6grid";
+  comic_script?: string; // optional: per-panel beats; if omitted we derive from prompt
 }
+
+const STYLE_PRESETS: Record<string, string> = {
+  african_royalty:
+    "Regal African subject in profile or three-quarter view, ornate beaded headwrap with real gold leaf accents, deep matte black skin rendered with luminous highlights, ceremonial gold jewelry, raw textured background of weathered parchment and gold flake. Mixed-media gallery painting, palette knife strokes, gold-leaf inlay, museum quality.",
+  chrome_metallic:
+    "Liquid chrome and brushed gold abstract composition, sweeping painterly waves of metallic pigment over a soft cloudy background, dramatic side-lighting catching every ridge of impasto, white feather-like wisps drifting through molten gold. Resin-finished, ultra glossy, contemporary luxury wall art.",
+  motivational:
+    "Powerful silhouetted figure (back turned or seated), body subtly composed of hand-painted affirmation words flowing across the skin like calligraphic tattoos, the words clearly legible and beautifully integrated. Distressed concrete + gold-leaf splash background, charcoal and gold palette, modern motivational fine-art piece.",
+  graffiti:
+    "Raw urban canvas painting: dripping spray-paint, layered stencils, torn poster textures, bold tag lettering, gold leaf splatter over weathered brick. Banksy-meets-Basquiat energy, high-contrast, gallery-grade graffiti fine art.",
+  abstract_ocean:
+    "Abstract aerial seascape: golden molten waves crashing into deep navy and teal, generous palette-knife impasto, real gold-leaf foam, sun catching peaks of paint. Painterly, museum-grade, dramatic chiaroscuro.",
+  modern_statement:
+    "Bold contemporary statement piece for a luxury living room, oversized scale energy, single striking subject, high-contrast palette of black + ivory + gold accents, layered mixed-media textures, refined gallery composition.",
+  comic_marvel:
+    "Modern Marvel-realism comic illustration: photoreal anatomy, dramatic rim lighting, painted color rendering (Alex Ross / variant cover quality), subtle ink lines, cinematic composition, hyper-detailed costume textures, atmospheric background, dynamic action pose.",
+};
+
+const COMIC_LAYOUTS: Record<string, string> = {
+  single:
+    "A single full-bleed comic illustration (one frame, no gutters).",
+  "2x2":
+    "A 2×2 grid comic page (4 equally-sized panels, clean white gutters ~12px between panels, thin black panel borders).",
+  "3v":
+    "A 3-panel vertical comic page (three stacked horizontal panels of equal height, clean white gutters, thin black borders).",
+  splash_2:
+    "A comic page with one large splash panel on top (full width, ~60% height) and two equal panels below it side-by-side, clean white gutters, thin black borders.",
+  "6grid":
+    "A classic 6-panel comic page (3 rows × 2 columns), uniform panels, clean white gutters ~12px, thin black borders.",
+};
 
 function jsonResponse(payload: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -46,9 +89,6 @@ async function fetchAsDataUrl(
   admin: ReturnType<typeof createClient>,
 ): Promise<string> {
   if (url.startsWith("data:")) return url;
-
-  // If this is a Supabase Storage URL for our paintings bucket, download via service role.
-  // Handles both public (.../object/public/paintings/<path>) and signed/private (.../object/paintings/<path>) URLs.
   const m = url.match(/\/storage\/v1\/object\/(?:public\/)?paintings\/([^?]+)/);
   if (m) {
     const objectPath = decodeURIComponent(m[1]);
@@ -58,8 +98,6 @@ async function fetchAsDataUrl(
     const buf = new Uint8Array(await data.arrayBuffer());
     return bytesToDataUrl(buf, ct);
   }
-
-  // Reject obvious non-image page URLs (Etsy, Pinterest pins, Amazon listings, etc.)
   const lower = url.toLowerCase();
   const looksLikePage =
     /(^|\.)etsy\.com|(^|\.)pinterest\.|(^|\.)amazon\.|(^|\.)ebay\.|\/listing\/|\/pin\/|\/dp\//.test(lower);
@@ -68,7 +106,6 @@ async function fetchAsDataUrl(
       "That link points to a webpage, not an image file. Right-click the image on the page and choose “Copy image address” (the URL should end in .jpg/.png/.webp), or upload the image directly.",
     );
   }
-
   const r = await fetch(url, {
     headers: {
       "User-Agent":
@@ -138,15 +175,35 @@ Deno.serve(async (req) => {
 
     const mode = body.mode ?? "create";
     const provider = mode === "remix" ? "lovable" : (body.provider ?? "lovable");
-    const aspectRatio = body.aspect_ratio ?? "1:1";
+    const aspectRatio = body.aspect_ratio ?? (mode === "comic" ? "3:4" : "1:1");
     const affirmation = (body.affirmation ?? "").trim();
     const affStyle = (body.affirmation_style ?? "").trim() || "elegant hand-lettered script in warm metallic gold leaf";
     const affirmationBlock = affirmation
       ? `\n\nIntegrate the affirmation text "${affirmation}" as a CREATIVE, ARTISTIC part of the composition — woven into the scene (e.g. painted on a wall, stitched into fabric, glowing in neon, formed by smoke, brushed across the sky, carved into stone). Treat it as fine-art typography in the style of: ${affStyle}. The text must be spelled correctly, legible, beautifully kerned, and feel like it belongs in the painting — not a watermark or sticker. Do not show any other text, captions, or signatures.`
       : "";
-    const finalPrompt = `${body.prompt}${affirmationBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+    const presetBlock = body.style_preset && STYLE_PRESETS[body.style_preset]
+      ? `\n\nVisual direction (preset ${body.style_preset}): ${STYLE_PRESETS[body.style_preset]}`
+      : "";
 
-    // Resolve category
+    let finalPrompt: string;
+    if (mode === "comic") {
+      const layoutKey = body.comic_layout ?? "2x2";
+      const layoutBlock = COMIC_LAYOUTS[layoutKey] ?? COMIC_LAYOUTS["2x2"];
+      const scriptBlock = (body.comic_script ?? "").trim()
+        ? `\n\nPanel script (render each beat in its own panel, in reading order left→right, top→bottom):\n${body.comic_script}`
+        : "";
+      finalPrompt =
+`Create a high-end realistic comic page in Modern Marvel-Realism style: photoreal anatomy, dramatic cinematic lighting, painted color rendering (Alex Ross / variant cover quality), subtle ink lines, hyper-detailed costume textures, atmospheric backgrounds, dynamic action poses.
+
+${layoutBlock}
+
+Story / scene: ${body.prompt}${scriptBlock}${affirmationBlock}${presetBlock}
+
+Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be CRISP, correctly spelled, professionally kerned, in classic comic lettering. If no dialogue is given, render the page silent (no text). Aspect ratio ${aspectRatio}, 8K, gallery-print quality, cohesive color palette across all panels.`;
+    } else {
+      finalPrompt = `${body.prompt}${presetBlock}${affirmationBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+    }
+
     let categoryId: string | null = body.category_id ?? null;
     if (!categoryId && body.category_slug) {
       const { data: cat } = await admin.from("categories").select("id").eq("slug", body.category_slug).maybeSingle();
@@ -156,7 +213,7 @@ Deno.serve(async (req) => {
     let imageBytes: Uint8Array;
     let contentType = "image/png";
     let modelUsed = "";
-    let externalId: string | null = null;
+    const externalId: string | null = null;
 
     if (mode === "remix") {
       if (!body.source_image_url) throw new Error("source_image_url required for remix");
@@ -194,7 +251,6 @@ Deno.serve(async (req) => {
       imageBytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) imageBytes[i] = bin.charCodeAt(i);
     } else if (provider === "openart") {
-      const OPENART_API_KEY = Deno.env.get("OPENART_API_KEY");
       return jsonResponse({
         error: 'OpenArt generation is not available from this Studio yet. Switch the Engine to "Lovable AI" to generate here.',
         code: "OPENART_UNSUPPORTED",
@@ -202,7 +258,11 @@ Deno.serve(async (req) => {
       }, 422);
     } else {
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
-      modelUsed = body.model ?? "google/gemini-3.1-flash-image-preview";
+      // Comic pages benefit from the higher-fidelity image model when available
+      const defaultModel = mode === "comic"
+        ? "google/gemini-3-pro-image-preview"
+        : "google/gemini-3.1-flash-image-preview";
+      modelUsed = body.model ?? defaultModel;
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
@@ -237,14 +297,23 @@ Deno.serve(async (req) => {
     const { data: pub } = admin.storage.from("paintings").getPublicUrl(path);
     const imageUrl = pub.publicUrl;
 
+    // Auto-resolve "comics" category when in comic mode and no category given
+    if (!categoryId && mode === "comic") {
+      const { data: cat } = await admin.from("categories").select("id").eq("slug", "comics").maybeSingle();
+      categoryId = cat?.id ?? null;
+    }
+
     const status = mode === "suggest" ? "pending_approval" : "approved";
     const isPublished = mode === "suggest" ? false : !!body.publish;
+    const tags = [...(body.tags ?? [])];
+    if (body.style_preset) tags.push(`preset:${body.style_preset}`);
+    if (mode === "comic") tags.push("comic", `layout:${body.comic_layout ?? "2x2"}`);
 
     const { data: painting, error: insErr } = await admin.from("paintings").insert({
       owner_id: userId,
-      title: body.title?.trim() || "Untitled",
+      title: body.title?.trim() || (mode === "comic" ? "Untitled Comic" : "Untitled"),
       prompt: body.prompt,
-      style: body.style ?? null,
+      style: body.style ?? (body.style_preset ?? null),
       aspect_ratio: aspectRatio,
       image_url: imageUrl,
       is_published: isPublished,
@@ -256,7 +325,7 @@ Deno.serve(async (req) => {
       category_id: categoryId,
       status,
       auto_suggested: mode === "suggest",
-      tags: body.tags ?? [],
+      tags,
     }).select().single();
     if (insErr) throw insErr;
 

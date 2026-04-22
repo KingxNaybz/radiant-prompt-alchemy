@@ -19,7 +19,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Michael Naybz — Art That Moves The Soul";
+    document.title = "Velour Walls — Art That Moves The Soul";
     supabase
       .from("paintings")
       .select("id,title,image_url,aspect_ratio,style,price_cents,created_at")
@@ -48,23 +48,22 @@ export default function Index() {
               <span className="italic text-gold-deep">Rendered in 8K.</span>
             </h1>
             <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-              The private gallery of Michael Naybz — hyper-real fine art,
-              gold-leaf portraiture, and museum-grade originals. Each piece commissioned,
-              signed, and limited.
+              Velour Walls — hyper-real fine art on canvas, glass, and acrylic.
+              Each piece directed in the private atelier by Naybz, signed, and limited.
             </p>
-            <div className="mt-10 flex gap-4">
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link
+                to="/buy"
+                className="inline-block px-7 py-3.5 bg-ink text-paper eyebrow hover:bg-gold-deep transition-colors"
+              >
+                Buy Now
+              </Link>
               <Link
                 to="/commission"
-                className="inline-block px-7 py-3.5 bg-ink text-paper eyebrow hover:bg-gold-deep transition-colors"
+                className="inline-block px-7 py-3.5 border border-ink eyebrow hover:bg-ink hover:text-paper transition-colors"
               >
                 Commission a piece
               </Link>
-              <a
-                href="#gallery"
-                className="inline-block px-7 py-3.5 border border-ink eyebrow hover:bg-ink hover:text-paper transition-colors"
-              >
-                View gallery
-              </a>
             </div>
           </div>
 
@@ -98,7 +97,7 @@ export default function Index() {
             "Art is not made to decorate walls.<br />
             It is made to move the soul."
           </p>
-          <div className="eyebrow text-paper/60 mt-8">— Michael Naybz</div>
+          <div className="eyebrow text-paper/60 mt-8">— Naybz, Velour Walls</div>
         </div>
       </section>
 

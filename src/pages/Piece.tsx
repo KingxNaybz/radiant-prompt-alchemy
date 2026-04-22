@@ -20,7 +20,7 @@ export default function Piece() {
       .then(({ data }) => {
         setP(data);
         setLoading(false);
-        if (data) document.title = `${data.title} — Michael Naybz`;
+        if (data) document.title = `${data.title} — Velour Walls`;
       });
   }, [id]);
 

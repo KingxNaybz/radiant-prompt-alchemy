@@ -33,15 +33,46 @@ function jsonResponse(payload: Record<string, unknown>, status = 200) {
   });
 }
 
-async function fetchAsDataUrl(url: string): Promise<string> {
-  if (url.startsWith("data:")) return url;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Failed to fetch source image (${r.status})`);
-  const ct = r.headers.get("content-type") ?? "image/png";
-  const buf = new Uint8Array(await r.arrayBuffer());
+function bytesToDataUrl(buf: Uint8Array, ct: string): string {
   let bin = "";
   for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
   return `data:${ct};base64,${btoa(bin)}`;
+}
+
+async function fetchAsDataUrl(
+  url: string,
+  admin: ReturnType<typeof createClient>,
+): Promise<string> {
+  if (url.startsWith("data:")) return url;
+
+  // If this is a Supabase Storage URL for our paintings bucket, download via service role.
+  // Handles both public (.../object/public/paintings/<path>) and signed/private (.../object/paintings/<path>) URLs.
+  const m = url.match(/\/storage\/v1\/object\/(?:public\/)?paintings\/([^?]+)/);
+  if (m) {
+    const objectPath = decodeURIComponent(m[1]);
+    const { data, error } = await admin.storage.from("paintings").download(objectPath);
+    if (error || !data) throw new Error(`Storage download failed: ${error?.message ?? "no data"}`);
+    const ct = data.type || "image/png";
+    const buf = new Uint8Array(await data.arrayBuffer());
+    return bytesToDataUrl(buf, ct);
+  }
+
+  const r = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      Accept: "image/*,*/*;q=0.8",
+    },
+    redirect: "follow",
+  });
+  if (!r.ok) {
+    throw new Error(
+      `Failed to fetch source image (${r.status}). If this is a private or hotlink-protected URL, upload the image instead of pasting the link.`,
+    );
+  }
+  const ct = r.headers.get("content-type") ?? "image/png";
+  const buf = new Uint8Array(await r.arrayBuffer());
+  return bytesToDataUrl(buf, ct);
 }
 
 Deno.serve(async (req) => {
@@ -108,7 +139,7 @@ Deno.serve(async (req) => {
       if (!body.source_image_url) throw new Error("source_image_url required for remix");
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
       modelUsed = body.model ?? "google/gemini-3.1-flash-image-preview";
-      const sourceDataUrl = await fetchAsDataUrl(body.source_image_url);
+      const sourceDataUrl = await fetchAsDataUrl(body.source_image_url, admin);
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },

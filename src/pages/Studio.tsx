@@ -322,6 +322,17 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
             {RATIOS.map((r) => <option key={r}>{r}</option>)}
           </Select>
         </div>
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Affirmation (optional)</div>
+          <input value={affirmation} onChange={(e) => setAffirmation(e.target.value)}
+            placeholder='e.g. "She is the storm." — painted into the scene'
+            className="w-full bg-transparent border-b border-border py-1.5 text-sm focus:outline-none focus:border-ink" />
+          {affirmation.trim() && (
+            <Select label="Lettering style" value={affStyle} onChange={setAffStyle}>
+              {AFFIRMATION_STYLES.map((s) => <option key={s}>{s}</option>)}
+            </Select>
+          )}
+        </div>
         <button onClick={remix} disabled={loading}
           className="w-full bg-ink text-paper eyebrow py-3.5 hover:bg-gold-deep transition-colors disabled:opacity-60">
           {loading ? "Remixing…" : "Remix it"}

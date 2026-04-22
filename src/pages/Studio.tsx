@@ -888,3 +888,100 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
     </button>
   );
 }
+
+/* ---------------- COMIC ---------------- */
+function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => void; setError: (e: string | null) => void; }) {
+  const [title, setTitle] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [script, setScript] = useState("");
+  const [layout, setLayout] = useState<string>("2x2");
+  const [ratio, setRatio] = useState("3:4");
+  const [publish, setPublish] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState<string>(() => cats.find((c) => c.slug === "comics")?.id ?? "");
+
+  useEffect(() => {
+    if (!categoryId) {
+      const c = cats.find((cc) => cc.slug === "comics");
+      if (c) setCategoryId(c.id);
+    }
+  }, [cats, categoryId]);
+
+  const generate = async () => {
+    setError(null);
+    if (prompt.trim().length < 5) return toast.error("Describe the scene or story.");
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("paint", {
+        body: {
+          mode: "comic",
+          prompt, title,
+          aspect_ratio: ratio,
+          publish,
+          category_id: categoryId || null,
+          comic_layout: layout,
+          comic_script: script.trim() || undefined,
+          style_preset: "comic_marvel",
+        },
+      });
+      if (error || (data as { error?: string } | null)?.error) {
+        const msg = getFunctionErrorMessage(error, data) ?? "Failed to draw the comic.";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      toast.success("Comic page rendered.");
+      setPrompt(""); setTitle(""); setScript("");
+      onDone();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      toast.error(msg);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-8">
+      <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
+        <div className="eyebrow text-muted-foreground">Realistic Comic Page</div>
+        <p className="text-xs text-muted-foreground">
+          Modern Marvel-realism: photoreal anatomy, cinematic lighting, painted color, subtle ink. Pick a layout, write a story or per-panel beats, and Naybz renders the full page in one image.
+        </p>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Page title (optional)"
+          className="w-full bg-transparent border-b border-border py-2 focus:outline-none focus:border-ink font-serif text-lg" />
+        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3}
+          placeholder="Overall scene / synopsis — e.g. A hooded vigilante chases an escaped tech-thief across a neon-lit Tokyo rooftop at midnight."
+          className="w-full bg-transparent border border-border p-3 text-sm focus:outline-none focus:border-ink resize-none" />
+        <textarea value={script} onChange={(e) => setScript(e.target.value)} rows={6}
+          placeholder={"Optional per-panel script. Example for 2×2:\nPanel 1: Wide — vigilante crouched on a rooftop, rain falling. Caption: \"Tokyo. 03:14.\"\nPanel 2: Close-up — thief glances back. SFX: TUMP TUMP.\nPanel 3: Action — vigilante leaps the gap. Dialogue (vigilante): \"End of the line.\"\nPanel 4: Splash — collision mid-air, lightning behind them."}
+          className="w-full bg-transparent border border-border p-3 text-xs font-mono focus:outline-none focus:border-ink resize-none" />
+        <div className="grid grid-cols-2 gap-3">
+          <Select label="Layout" value={layout} onChange={setLayout}>
+            {COMIC_LAYOUTS.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+          </Select>
+          <Select label="Format" value={ratio} onChange={setRatio}>
+            {RATIOS.map((r) => <option key={r}>{r}</option>)}
+          </Select>
+          <Select label="Category" value={categoryId} onChange={setCategoryId}>
+            <option value="">Uncategorized</option>
+            {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </Select>
+        </div>
+        <label className="flex items-center gap-2 text-sm pt-2">
+          <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
+          Publish to public gallery immediately
+        </label>
+        <button onClick={generate} disabled={loading}
+          className="w-full bg-ink text-paper eyebrow py-3.5 hover:bg-gold-deep transition-colors disabled:opacity-60">
+          {loading ? "Naybz is inking the page…" : "Render comic page"}
+        </button>
+        <p className="text-[0.65rem] text-muted-foreground italic border-t border-border pt-2">
+          Tip: comic pages use a higher-fidelity image model — render time can be 30–90 seconds per page.
+        </p>
+      </div>
+      <div className="lg:col-span-7 border border-dashed border-border p-12 text-center text-muted-foreground self-start">
+        <p className="font-serif italic text-2xl">Your comic page appears here.</p>
+        <p className="mt-2 text-sm">Single splash, 2×2, 3-panel, splash + 2, or full 6-panel grid — your call.</p>
+      </div>
+    </div>
+  );
+}

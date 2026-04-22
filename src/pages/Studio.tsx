@@ -126,6 +126,7 @@ export default function Studio() {
           {tab === "create" && <CreateTab cats={cats} onDone={refresh} setError={setErrorBanner} />}
           {tab === "remix" && <RemixTab cats={cats} onDone={refresh} setError={setErrorBanner} />}
           {tab === "inspire" && <InspireTab cats={cats} onDone={refresh} />}
+          {tab === "mass" && <MassProduceTab cats={cats} onDone={refresh} />}
           {tab === "pending" && <PendingTab works={pending} cats={cats} onChange={refresh} />}
           {tab === "library" && <LibraryTab works={approved} cats={cats} onChange={refresh} onCatsChange={refreshCats} />}
           {tab === "marketplace" && <MarketplaceTab works={approved} onChange={refresh} />}

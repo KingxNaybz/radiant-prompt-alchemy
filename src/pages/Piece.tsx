@@ -59,10 +59,16 @@ export default function Piece() {
             </div>
           )}
           <Link
-            to="/commission"
+            to="/buy"
             className="mt-8 inline-block w-full text-center px-6 py-3.5 bg-ink text-paper eyebrow hover:bg-gold-deep transition-colors"
           >
-            Inquire about this piece
+            Order on canvas / glass / acrylic
+          </Link>
+          <Link
+            to="/commission"
+            className="mt-3 inline-block w-full text-center px-6 py-3.5 border border-ink eyebrow hover:bg-ink hover:text-paper transition-colors"
+          >
+            Commission a custom piece
           </Link>
         </aside>
       </article>

@@ -223,6 +223,20 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
             OpenArt generation is not available from this Studio yet. Use Lovable AI to paint here.
           </div>
         )}
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Affirmation (optional)</div>
+          <input value={affirmation} onChange={(e) => setAffirmation(e.target.value)}
+            placeholder='e.g. "Stay golden." — woven into the art'
+            className="w-full bg-transparent border-b border-border py-1.5 text-sm focus:outline-none focus:border-ink" />
+          {affirmation.trim() && (
+            <Select label="Lettering style" value={affStyle} onChange={setAffStyle}>
+              {AFFIRMATION_STYLES.map((s) => <option key={s}>{s}</option>)}
+            </Select>
+          )}
+          <p className="text-[0.7rem] text-muted-foreground italic">
+            Naybz will paint these words into the piece — gold leaf, neon, smoke, embroidery — never as a watermark.
+          </p>
+        </div>
         <label className="flex items-center gap-2 text-sm pt-2">
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish to public gallery immediately

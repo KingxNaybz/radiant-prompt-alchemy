@@ -594,6 +594,99 @@ function MarketplaceTab({ works, onChange }: { works: Painting[]; onChange: () =
   );
 }
 
+/* ---------------- MASS PRODUCE ---------------- */
+function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void; }) {
+  const [categorySlug, setCategorySlug] = useState<string>(cats[0]?.slug ?? "");
+  const [count, setCount] = useState<number>(10);
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number; created: number }>({ done: 0, total: 0, created: 0 });
+
+  useEffect(() => {
+    if (!categorySlug && cats[0]?.slug) setCategorySlug(cats[0].slug);
+  }, [cats, categorySlug]);
+
+  const run = async () => {
+    if (!categorySlug) return toast.error("Pick a category.");
+    const total = Math.min(Math.max(count, 1), 50);
+    const chunkSize = 5;
+    setRunning(true);
+    setProgress({ done: 0, total, created: 0 });
+    let createdTotal = 0;
+    try {
+      let remaining = total;
+      while (remaining > 0) {
+        const c = Math.min(chunkSize, remaining);
+        const { data, error } = await supabase.functions.invoke("suggest-art", {
+          body: { count: c, category_slug: categorySlug },
+        });
+        if (error || (data as any)?.error) {
+          const msg = getFunctionErrorMessage(error, data);
+          toast.error(msg);
+          break;
+        }
+        const created = (data as any)?.created ?? 0;
+        createdTotal += created;
+        remaining -= c;
+        setProgress({ done: total - remaining, total, created: createdTotal });
+        onDone();
+      }
+      toast.success(`Mass produce complete — ${createdTotal} new pieces awaiting approval.`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="border border-border bg-card p-6 space-y-4">
+        <div>
+          <div className="eyebrow text-muted-foreground mb-1">Mass produce a themed batch</div>
+          <p className="text-sm text-muted-foreground">
+            Paint many pieces in a single category in one go — sports stays with sports, abstract with abstract.
+            Every piece lands in <span className="text-ink">Pending</span> for your approval.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Select label="Category / Theme" value={categorySlug} onChange={setCategorySlug}>
+            {cats.length === 0 && <option value="">No categories</option>}
+            {cats.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+          </Select>
+          <div>
+            <label className="eyebrow text-muted-foreground text-[0.6rem]">How many</label>
+            <input type="number" min={1} max={50} value={count}
+              onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+              className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm" />
+          </div>
+          <div className="flex items-end">
+            <button onClick={run} disabled={running || cats.length === 0}
+              className="w-full bg-ink text-paper eyebrow py-3 hover:bg-gold-deep transition-colors disabled:opacity-60">
+              {running ? `Painting ${progress.done}/${progress.total}…` : `Paint ${count} pieces`}
+            </button>
+          </div>
+        </div>
+        {running && (
+          <div className="space-y-2">
+            <div className="h-2 bg-secondary border border-border overflow-hidden">
+              <div className="h-full bg-gold-deep transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="text-xs text-muted-foreground flex justify-between">
+              <span>{progress.done} of {progress.total} processed</span>
+              <span>{progress.created} created so far</span>
+            </div>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground border-t border-border pt-3">
+          Tip: large batches run in chunks of 5 behind the scenes. Heavy batches may take a few minutes — keep this tab open.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- helpers ---------------- */
 function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode; }) {
   return (

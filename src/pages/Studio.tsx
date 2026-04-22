@@ -250,6 +250,24 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
             </p>
           )}
         </div>
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Finish</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {FINISHES.map((f) => (
+              <button key={f.key} type="button" onClick={() => setFinish(f.key)}
+                title={f.blurb}
+                className={`text-left px-2.5 py-1.5 text-[0.7rem] border transition-colors ${finish === f.key ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+                <div className="eyebrow text-[0.65rem]">{f.label}</div>
+                <div className={`text-[0.6rem] truncate ${finish === f.key ? "text-paper/70" : "text-muted-foreground"}`}>{f.blurb}</div>
+              </button>
+            ))}
+          </div>
+          {finish === "high_gloss" && (
+            <p className="text-[0.65rem] text-muted-foreground italic">
+              Naybz will render the piece with a mirror-like acrylic / resin finish — ultra-saturated, glossy reflections, premium wall-art look.
+            </p>
+          )}
+        </div>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (optional)"
           className="w-full bg-transparent border-b border-border py-2 focus:outline-none focus:border-ink font-serif text-lg" />
         <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6}

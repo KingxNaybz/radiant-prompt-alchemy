@@ -183,6 +183,7 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const [categoryId, setCategoryId] = useState<string>("");
   const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
   const [preset, setPreset] = useState<string>("");
+  const [finish, setFinish] = useState<"matte" | "high_gloss">("matte");
 
   const applyPreset = (key: string) => {
     if (preset === key) { setPreset(""); return; }

@@ -39,8 +39,8 @@ export default function Index() {
 
   const visible = activeCat === "all" ? paintings : paintings.filter((p) => p.category_id === activeCat);
 
-  const featured = paintings[0];
-  const rest = paintings.slice(1);
+  const featured = visible[0];
+  const rest = visible.slice(1);
 
   return (
     <div className="min-h-screen bg-paper text-ink">

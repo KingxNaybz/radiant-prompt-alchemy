@@ -57,20 +57,36 @@ async function fetchAsDataUrl(
     return bytesToDataUrl(buf, ct);
   }
 
+  // Reject obvious non-image page URLs (Etsy, Pinterest pins, Amazon listings, etc.)
+  const lower = url.toLowerCase();
+  const looksLikePage =
+    /(^|\.)etsy\.com|(^|\.)pinterest\.|(^|\.)amazon\.|(^|\.)ebay\.|\/listing\/|\/pin\/|\/dp\//.test(lower);
+  if (looksLikePage) {
+    throw new Error(
+      "That link points to a webpage, not an image file. Right-click the image on the page and choose “Copy image address” (the URL should end in .jpg/.png/.webp), or upload the image directly.",
+    );
+  }
+
   const r = await fetch(url, {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
       Accept: "image/*,*/*;q=0.8",
+      Referer: new URL(url).origin + "/",
     },
     redirect: "follow",
   });
   if (!r.ok) {
     throw new Error(
-      `Failed to fetch source image (${r.status}). If this is a private or hotlink-protected URL, upload the image instead of pasting the link.`,
+      `Failed to fetch source image (${r.status}). The site is blocking direct downloads. Please upload the image file instead, or use a direct image URL ending in .jpg/.png/.webp.`,
     );
   }
-  const ct = r.headers.get("content-type") ?? "image/png";
+  const ct = (r.headers.get("content-type") ?? "image/png").toLowerCase();
+  if (!ct.startsWith("image/")) {
+    throw new Error(
+      `That URL returned ${ct || "non-image content"}, not an image. Please upload the image file or paste a direct image link.`,
+    );
+  }
   const buf = new Uint8Array(await r.arrayBuffer());
   return bytesToDataUrl(buf, ct);
 }

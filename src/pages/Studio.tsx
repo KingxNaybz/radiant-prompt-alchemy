@@ -211,6 +211,7 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
           prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create",
           category_id: categoryId || null,
           style_preset: preset || undefined,
+          finish,
           affirmation: affirmation.trim() || undefined,
           affirmation_style: affirmation.trim() ? affStyle : undefined,
         },

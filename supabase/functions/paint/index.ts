@@ -24,6 +24,8 @@ interface PaintBody {
   category_id?: string | null;
   category_slug?: string | null;
   tags?: string[];
+  affirmation?: string;
+  affirmation_style?: string; // e.g. "gold leaf script", "neon", "graffiti"
 }
 
 function jsonResponse(payload: Record<string, unknown>, status = 200) {

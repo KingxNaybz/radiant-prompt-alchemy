@@ -11,25 +11,33 @@ interface Painting {
   aspect_ratio: string;
   style: string | null;
   price_cents: number | null;
+  category_id: string | null;
   created_at: string;
 }
+interface Category { id: string; slug: string; name: string; sort_order: number; }
 
 export default function Index() {
   const [paintings, setPaintings] = useState<Painting[]>([]);
+  const [cats, setCats] = useState<Category[]>([]);
+  const [activeCat, setActiveCat] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Velour Walls — Art That Moves The Soul";
-    supabase
-      .from("paintings")
-      .select("id,title,image_url,aspect_ratio,style,price_cents,created_at")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setPaintings(data ?? []);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase.from("paintings")
+        .select("id,title,image_url,aspect_ratio,style,price_cents,category_id,created_at")
+        .eq("is_published", true).eq("status", "approved")
+        .order("created_at", { ascending: false }),
+      supabase.from("categories").select("*").order("sort_order"),
+    ]).then(([p, c]) => {
+      setPaintings((p.data ?? []) as Painting[]);
+      setCats((c.data ?? []) as Category[]);
+      setLoading(false);
+    });
   }, []);
+
+  const visible = activeCat === "all" ? paintings : paintings.filter((p) => p.category_id === activeCat);
 
   const featured = paintings[0];
   const rest = paintings.slice(1);

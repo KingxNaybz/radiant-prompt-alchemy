@@ -26,6 +26,13 @@ interface PaintBody {
   tags?: string[];
 }
 
+function jsonResponse(payload: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 async function fetchAsDataUrl(url: string): Promise<string> {
   if (url.startsWith("data:")) return url;
   const r = await fetch(url);
@@ -134,49 +141,11 @@ Deno.serve(async (req) => {
       for (let i = 0; i < bin.length; i++) imageBytes[i] = bin.charCodeAt(i);
     } else if (provider === "openart") {
       const OPENART_API_KEY = Deno.env.get("OPENART_API_KEY");
-      if (!OPENART_API_KEY) {
-        return new Response(JSON.stringify({ error: "OPENART_API_KEY not configured." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const dims = aspectRatio === "16:9" ? { width: 1820, height: 1024 }
-        : aspectRatio === "9:16" ? { width: 1024, height: 1820 }
-        : { width: 1536, height: 1536 };
-      modelUsed = body.model ?? "flux-pro";
-      const create = await fetch("https://openart.ai/api/v1/text2image/creations", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${OPENART_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalPrompt, model: modelUsed, width: dims.width, height: dims.height, num_images: 1 }),
-      });
-      const createText = await create.text();
-      let createJson: any;
-      try { createJson = JSON.parse(createText); } catch {
-        throw new Error(`OpenArt does not expose a public REST API for generation — the endpoint returned HTML (status ${create.status}). OpenArt credits can only be used inside openart.ai itself. Switch the Engine to "Lovable AI" to generate from here.`);
-      }
-      if (!create.ok) throw new Error(`OpenArt error [${create.status}]: ${JSON.stringify(createJson)}`);
-      const creationId = createJson?.id ?? createJson?.creation_id ?? createJson?.data?.id;
-      if (!creationId) throw new Error("OpenArt: no creation id returned");
-      externalId = String(creationId);
-
-      let url: string | undefined;
-      for (let i = 0; i < 60; i++) {
-        await new Promise((r) => setTimeout(r, 2000));
-        const poll = await fetch(`https://openart.ai/api/v1/text2image/creations/${creationId}`, { headers: { Authorization: `Bearer ${OPENART_API_KEY}` } });
-        const pollText = await poll.text();
-        let pollJson: any;
-        try { pollJson = JSON.parse(pollText); } catch { throw new Error(`OpenArt poll returned non-JSON (${poll.status})`); }
-        const status = pollJson?.status ?? pollJson?.data?.status;
-        const imgs = pollJson?.image_urls ?? pollJson?.images ?? pollJson?.data?.image_urls ?? pollJson?.data?.images;
-        if (imgs && imgs.length > 0) {
-          const first = imgs[0];
-          url = typeof first === "string" ? first : first?.url ?? first?.image_url;
-          if (url) break;
-        }
-        if (status === "FAILED" || status === "failed") throw new Error(`OpenArt generation failed`);
-      }
-      if (!url) throw new Error("OpenArt timed out");
-      const imgResp = await fetch(url);
-      contentType = imgResp.headers.get("content-type") ?? "image/png";
-      imageBytes = new Uint8Array(await imgResp.arrayBuffer());
+      return jsonResponse({
+        error: 'OpenArt generation is not available from this Studio yet. Switch the Engine to "Lovable AI" to generate here.',
+        code: "OPENART_UNSUPPORTED",
+        provider: "openart",
+      }, 422);
     } else {
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
       modelUsed = body.model ?? "google/gemini-3.1-flash-image-preview";
@@ -237,12 +206,9 @@ Deno.serve(async (req) => {
     }).select().single();
     if (insErr) throw insErr;
 
-    return new Response(JSON.stringify({ painting }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ painting }, 200);
   } catch (e) {
     console.error("paint error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return jsonResponse({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });

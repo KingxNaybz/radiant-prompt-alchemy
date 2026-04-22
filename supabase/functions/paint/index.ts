@@ -1,5 +1,5 @@
 // Naybz painting engine — calls Lovable AI (Nano Banana 2) by default.
-// Optionally uses an external Leonardo API key if the user has set one.
+// Optionally uses an external OpenArt API key if the user has set one.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -13,7 +13,8 @@ interface PaintBody {
   title?: string;
   style?: string;
   aspect_ratio?: string;
-  provider?: "lovable" | "leonardo";
+  provider?: "lovable" | "openart";
+  model?: string;
   publish?: boolean;
 }
 
@@ -76,48 +77,70 @@ Deno.serve(async (req) => {
     let imageBytes: Uint8Array;
     let contentType = "image/png";
 
-    if (provider === "leonardo") {
-      const LEONARDO_API_KEY = Deno.env.get("LEONARDO_API_KEY");
-      if (!LEONARDO_API_KEY) {
+    if (provider === "openart") {
+      const OPENART_API_KEY = Deno.env.get("OPENART_API_KEY");
+      if (!OPENART_API_KEY) {
         return new Response(
-          JSON.stringify({ error: "LEONARDO_API_KEY not configured. Add it in Cloud secrets." }),
+          JSON.stringify({ error: "OPENART_API_KEY not configured. Add it in Cloud secrets." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      // Kick off Leonardo generation
-      const create = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", {
+      // Map aspect ratio to dimensions (square defaults to high res for 8K-style output)
+      const dims =
+        aspectRatio === "16:9"
+          ? { width: 1820, height: 1024 }
+          : aspectRatio === "9:16"
+          ? { width: 1024, height: 1820 }
+          : { width: 1536, height: 1536 };
+
+      // Kick off OpenArt generation
+      const create = await fetch("https://openart.ai/api/v1/text2image/creations", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LEONARDO_API_KEY}`,
+          Authorization: `Bearer ${OPENART_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           prompt: finalPrompt,
+          model: body.model ?? "flux-pro",
+          width: dims.width,
+          height: dims.height,
           num_images: 1,
-          width: 1024,
-          height: aspectRatio === "16:9" ? 576 : aspectRatio === "9:16" ? 1820 : 1024,
-          modelId: "aa77f04e-3eec-4034-9c07-d0f619684628", // Leonardo Kino XL
         }),
       });
       const createJson = await create.json();
-      const generationId = createJson?.sdGenerationJob?.generationId;
-      if (!generationId) throw new Error("Leonardo generation failed");
-      // Poll
+      if (!create.ok) {
+        throw new Error(`OpenArt create failed [${create.status}]: ${JSON.stringify(createJson)}`);
+      }
+      const creationId =
+        createJson?.id ?? createJson?.creation_id ?? createJson?.data?.id;
+      if (!creationId) throw new Error("OpenArt: no creation id returned");
+
+      // Poll for completion
       let url: string | undefined;
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
         const poll = await fetch(
-          `https://cloud.leonardo.ai/api/rest/v1/generations/${generationId}`,
-          { headers: { Authorization: `Bearer ${LEONARDO_API_KEY}` } },
+          `https://openart.ai/api/v1/text2image/creations/${creationId}`,
+          { headers: { Authorization: `Bearer ${OPENART_API_KEY}` } },
         );
         const pollJson = await poll.json();
-        const imgs = pollJson?.generations_by_pk?.generated_images;
+        const status = pollJson?.status ?? pollJson?.data?.status;
+        const imgs =
+          pollJson?.image_urls ??
+          pollJson?.images ??
+          pollJson?.data?.image_urls ??
+          pollJson?.data?.images;
         if (imgs && imgs.length > 0) {
-          url = imgs[0].url;
-          break;
+          const first = imgs[0];
+          url = typeof first === "string" ? first : first?.url ?? first?.image_url;
+          if (url) break;
+        }
+        if (status === "FAILED" || status === "failed") {
+          throw new Error(`OpenArt generation failed: ${JSON.stringify(pollJson)}`);
         }
       }
-      if (!url) throw new Error("Leonardo timed out");
+      if (!url) throw new Error("OpenArt timed out");
       const imgResp = await fetch(url);
       contentType = imgResp.headers.get("content-type") ?? "image/png";
       imageBytes = new Uint8Array(await imgResp.arrayBuffer());

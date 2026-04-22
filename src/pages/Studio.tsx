@@ -65,7 +65,7 @@ interface Painting {
 }
 interface Idea { title: string; prompt: string; style?: string; category_slug?: string; aspect_ratio?: string; }
 
-type Tab = "create" | "remix" | "inspire" | "mass" | "comic" | "pending" | "library" | "marketplace";
+type Tab = "create" | "remix" | "inspire" | "mass" | "comic" | "pending" | "library" | "marketplace" | "suppliers";
 
 function getFunctionErrorMessage(error: unknown, data: unknown) {
   const payloadError = (data as { error?: unknown } | null)?.error;
@@ -143,6 +143,7 @@ export default function Studio() {
               ["pending", `Pending (${pending.length})`],
               ["library", `Library (${approved.length})`],
               ["marketplace", "Marketplace"],
+              ["suppliers", "Suppliers"],
             ] as [Tab, string][]).map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)}
                 className={`eyebrow px-4 py-2 transition-colors ${tab === t ? "bg-ink text-paper" : "hover:bg-secondary"}`}>
@@ -168,6 +169,7 @@ export default function Studio() {
           {tab === "pending" && <PendingTab works={pending} cats={cats} onChange={refresh} />}
           {tab === "library" && <LibraryTab works={approved} cats={cats} onChange={refresh} onCatsChange={refreshCats} />}
           {tab === "marketplace" && <MarketplaceTab works={approved} onChange={refresh} />}
+          {tab === "suppliers" && <SuppliersTab />}
         </div>
       </div>
     </div>
@@ -433,6 +435,7 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
   const [query, setQuery] = useState(""); const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(false); const [generating, setGenerating] = useState<string | null>(null);
   const [batchLoading, setBatchLoading] = useState(false);
+  const [batchPreset, setBatchPreset] = useState<string>("");
 
   const search = async () => {
     if (query.trim().length < 2) return;
@@ -493,7 +496,9 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
   const batchSuggest = async () => {
     setBatchLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("suggest-art", { body: { count: 3 } });
+      const { data, error } = await supabase.functions.invoke("suggest-art", {
+        body: { count: 3, style_preset: batchPreset || undefined },
+      });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success(`${(data as any).created} new suggestions awaiting approval.`);
@@ -506,6 +511,22 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
     <div className="space-y-8">
       <div className="border border-border bg-card p-6">
         <div className="eyebrow text-muted-foreground mb-3">Inspire me</div>
+        <div className="mb-3">
+          <div className="eyebrow text-[0.65rem] text-gold-deep mb-1.5">Bias toward a Crib-style direction (optional)</div>
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => setBatchPreset("")}
+              className={`eyebrow text-[0.65rem] px-2.5 py-1.5 border ${batchPreset === "" ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+              Mixed
+            </button>
+            {STYLE_PRESETS.map((p) => (
+              <button key={p.key} onClick={() => setBatchPreset(p.key)}
+                title={p.blurb}
+                className={`eyebrow text-[0.65rem] px-2.5 py-1.5 border ${batchPreset === p.key ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex gap-3 flex-wrap">
           <button onClick={batchSuggest} disabled={batchLoading}
             className="bg-ink text-paper eyebrow px-5 py-3 hover:bg-gold-deep transition-colors disabled:opacity-60">
@@ -1007,6 +1028,138 @@ function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
       <div className="lg:col-span-7 border border-dashed border-border p-12 text-center text-muted-foreground self-start">
         <p className="font-serif italic text-2xl">Your comic page appears here.</p>
         <p className="mt-2 text-sm">Single splash, 2×2, 3-panel, splash + 2, or full 6-panel grid — your call.</p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- SUPPLIERS ---------------- */
+interface Supplier {
+  name: string;
+  url: string;
+  region: string;
+  blurb: string;
+  products: string[];
+  api: string;
+  bestFor: string;
+  recommended?: boolean;
+}
+
+const SUPPLIERS: Supplier[] = [
+  {
+    name: "Gelato",
+    url: "https://www.gelato.com/products/acrylic-prints",
+    region: "Global · 32 countries (local print)",
+    blurb: "Largest local-print POD network. Acrylic, canvas, framed, posters. Auto-routes to nearest factory for fast, low-CO₂ shipping.",
+    products: ["High-gloss acrylic", "Stretched canvas", "Framed prints", "Posters"],
+    api: "Shopify, Etsy, WooCommerce, Wix, Squarespace, Public API",
+    bestFor: "Best overall — global reach + Crib-style high-gloss acrylic. Plug into Etsy/Shopify in minutes.",
+    recommended: true,
+  },
+  {
+    name: "Sensaria",
+    url: "https://www.sensaria.com/",
+    region: "USA (multi-facility)",
+    blurb: "World's largest POD wall-décor manufacturer. Premium acrylic, metal, canvas. White-label dropship for artists.",
+    products: ["HD acrylic", "ChromaLuxe metal", "Gallery canvas", "Wood"],
+    api: "REST API, Shopify, custom EDI",
+    bestFor: "Highest-end finish — gallery-grade acrylic that matches Social Culture Art quality.",
+    recommended: true,
+  },
+  {
+    name: "Lumaprints",
+    url: "https://lumaprints.com/",
+    region: "USA",
+    blurb: "Affordable premium prints on demand, fast US fulfillment. Acrylic, canvas, framed, metal, wood.",
+    products: ["Acrylic", "Canvas", "Framed canvas", "Metal", "Peel & stick"],
+    api: "Shopify, WooCommerce, Etsy, Public API",
+    bestFor: "Best price-to-quality ratio for scaling. Strong for canvas + acrylic combo stores.",
+  },
+  {
+    name: "Gooten",
+    url: "https://www.gooten.com/print-on-demand/acrylic-prints/",
+    region: "Global",
+    blurb: "Established POD platform with automated routing. Glossy acrylic up to 30×40, hanging hardware included.",
+    products: ["Glossy acrylic", "Canvas", "Framed posters", "Apparel"],
+    api: "Shopify, Etsy, WooCommerce, BigCommerce, REST API",
+    bestFor: "Mature API + multi-product catalog if you later expand beyond wall art.",
+  },
+  {
+    name: "Printful",
+    url: "https://www.printful.com/",
+    region: "Global · USA, EU, UK, AU, JP, BR",
+    blurb: "Most polished POD experience. Canvas, framed posters, premium posters. (No acrylic — pair with Gelato/Sensaria for that.)",
+    products: ["Stretched canvas", "Framed posters", "Premium posters"],
+    api: "Shopify, Etsy, WooCommerce, Wix, Squarespace, Public API",
+    bestFor: "Easiest onboarding for canvas + framed prints. Use alongside an acrylic specialist.",
+  },
+  {
+    name: "Canvas N Decor (C&D USA)",
+    url: "https://canvasndecor.com/product/custom-acrylic-prints",
+    region: "USA",
+    blurb: "Specialty trade printer for custom HD glossy acrylic. Up to 48\" sizes. Wholesale pricing for resellers.",
+    products: ["HD glossy acrylic", "Canvas", "Metal"],
+    api: "Manual order portal (no native POD API — fulfillment partner style)",
+    bestFor: "Wholesale runs of best-sellers once a SKU proves out. Lowest unit cost on big sizes.",
+  },
+];
+
+function SuppliersTab() {
+  return (
+    <div className="space-y-6">
+      <div className="border border-border bg-card p-6">
+        <div className="eyebrow text-muted-foreground mb-2">Fulfillment partners</div>
+        <h2 className="font-serif text-3xl">Print-on-demand suppliers</h2>
+        <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+          Vetted partners that can drop-ship Naybz pieces — high-gloss acrylic (Crib of Art / Social Culture Art look),
+          gallery canvas, framed prints, and metal — straight to the buyer with no inventory on your side.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="eyebrow text-[0.65rem] px-2 py-1 bg-gold-deep/10 text-gold-deep border border-gold-deep/30">Recommended stack</span>
+          <span className="text-xs text-muted-foreground self-center">
+            <span className="text-ink font-semibold">Gelato</span> for global + <span className="text-ink font-semibold">Sensaria</span> for premium US acrylic.
+          </span>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {SUPPLIERS.map((s) => (
+          <div key={s.name} className={`border p-5 bg-card ${s.recommended ? "border-gold-deep" : "border-border"}`}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-serif text-xl">{s.name}</h3>
+                  {s.recommended && (
+                    <span className="eyebrow text-[0.55rem] px-1.5 py-0.5 bg-gold-deep text-paper">Recommended</span>
+                  )}
+                </div>
+                <div className="eyebrow text-[0.6rem] text-muted-foreground mt-0.5">{s.region}</div>
+              </div>
+              <a href={s.url} target="_blank" rel="noopener noreferrer"
+                className="eyebrow text-[0.65rem] border border-ink px-2.5 py-1 hover:bg-ink hover:text-paper transition-colors shrink-0">
+                Visit ↗
+              </a>
+            </div>
+            <p className="text-sm mt-3">{s.blurb}</p>
+            <div className="mt-3 space-y-1.5">
+              <div className="text-xs">
+                <span className="eyebrow text-[0.6rem] text-gold-deep">Products · </span>
+                <span className="text-muted-foreground">{s.products.join(" · ")}</span>
+              </div>
+              <div className="text-xs">
+                <span className="eyebrow text-[0.6rem] text-gold-deep">Integrations · </span>
+                <span className="text-muted-foreground">{s.api}</span>
+              </div>
+            </div>
+            <p className="text-xs italic text-ink mt-3 border-t border-border pt-2">{s.bestFor}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="border border-dashed border-border p-5 text-sm text-muted-foreground">
+        <span className="eyebrow text-[0.65rem] text-ink">Next step · </span>
+        Pick a partner, create an account, then I can wire their API into a "Push to fulfillment" button on each approved
+        painting — auto-creating the SKU + product listing on Etsy/Shopify with the correct size, finish, and price.
       </div>
     </div>
   );

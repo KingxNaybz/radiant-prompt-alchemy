@@ -21,6 +21,7 @@ const PRESET_DIRECTIONS: Record<string, string> = {
   abstract_ocean: "Aerial seascapes with golden molten waves crashing into navy and teal, palette-knife impasto.",
   modern_statement: "Bold contemporary statement piece — single striking subject, ivory + black + gold accents, mixed-media texture.",
   comic_marvel: "Modern Marvel-realism comic illustrations: photoreal anatomy, painted color, cinematic rim lighting, dynamic poses.",
+  high_gloss: "Social Culture Art best-seller energy: high-gloss acrylic / resin wall print look, mirror-like surface, ultra-saturated color, painterly impasto under glass.",
 };
 
 Deno.serve(async (req) => {

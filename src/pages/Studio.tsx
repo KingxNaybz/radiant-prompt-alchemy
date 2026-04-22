@@ -224,6 +224,24 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
     <div className="grid lg:grid-cols-12 gap-8">
       <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
         <div className="eyebrow text-muted-foreground">New original</div>
+        <div className="border border-border bg-secondary/30 p-3 space-y-2">
+          <div className="eyebrow text-[0.65rem] text-gold-deep">Crib-style presets (one click)</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {STYLE_PRESETS.map((p) => (
+              <button key={p.key} type="button" onClick={() => applyPreset(p.key)}
+                title={p.blurb}
+                className={`text-left px-2.5 py-1.5 text-[0.7rem] border transition-colors ${preset === p.key ? "bg-ink text-paper border-ink" : "border-border hover:border-ink"}`}>
+                <div className="eyebrow text-[0.65rem]">{p.label}</div>
+                <div className={`text-[0.6rem] truncate ${preset === p.key ? "text-paper/70" : "text-muted-foreground"}`}>{p.blurb}</div>
+              </button>
+            ))}
+          </div>
+          {preset && (
+            <p className="text-[0.65rem] text-muted-foreground italic">
+              Naybz will fuse your prompt with the <span className="text-ink">{STYLE_PRESETS.find((p) => p.key === preset)?.label}</span> direction.
+            </p>
+          )}
+        </div>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (optional)"
           className="w-full bg-transparent border-b border-border py-2 focus:outline-none focus:border-ink font-serif text-lg" />
         <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6}

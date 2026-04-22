@@ -386,6 +386,33 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
     finally { setGenerating(null); }
   };
 
+  const paintAllIdeas = async () => {
+    if (ideas.length === 0) return;
+    setGenerating("__all__");
+    let ok = 0;
+    for (const idea of ideas) {
+      try {
+        const { data, error } = await supabase.functions.invoke("paint", {
+          body: {
+            prompt: idea.prompt, title: idea.title, style: idea.style,
+            aspect_ratio: idea.aspect_ratio ?? "1:1", mode: "create",
+            category_slug: idea.category_slug,
+          },
+        });
+        if (error || (data as any)?.error) {
+          toast.error(`${idea.title}: ${getFunctionErrorMessage(error, data)}`);
+          continue;
+        }
+        ok++;
+        onDone();
+      } catch (e: any) {
+        toast.error(`${idea.title}: ${e.message ?? "Failed"}`);
+      }
+    }
+    toast.success(`Painted ${ok}/${ideas.length} ideas.`);
+    setGenerating(null);
+  };
+
   const batchSuggest = async () => {
     setBatchLoading(true);
     try {
@@ -424,23 +451,76 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
           </button>
         </div>
         {ideas.length > 0 && (
-          <div className="mt-6 grid md:grid-cols-2 gap-4">
-            {ideas.map((idea, i) => (
-              <div key={i} className="border border-border p-4">
-                <div className="flex justify-between gap-2">
-                  <div className="font-serif text-lg">{idea.title}</div>
-                  <span className="eyebrow text-[0.6rem] text-gold-deep">{idea.category_slug}</span>
+          <>
+            <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm text-muted-foreground">{ideas.length} ideas ready.</div>
+              <button onClick={paintAllIdeas} disabled={generating !== null}
+                className="bg-gold-deep text-paper eyebrow px-5 py-2.5 text-xs hover:opacity-90 transition-opacity disabled:opacity-60">
+                {generating === "__all__" ? "Painting all…" : `Paint all ${ideas.length}`}
+              </button>
+            </div>
+            <div className="mt-4 grid md:grid-cols-2 gap-4">
+              {ideas.map((idea, i) => (
+                <div key={i} className="border border-border p-4">
+                  <div className="flex justify-between gap-2">
+                    <div className="font-serif text-lg">{idea.title}</div>
+                    <span className="eyebrow text-[0.6rem] text-gold-deep">{idea.category_slug}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{idea.prompt}</p>
+                  <button onClick={() => paintIdea(idea)} disabled={generating !== null}
+                    className="mt-3 w-full bg-ink text-paper eyebrow py-2 text-xs hover:bg-gold-deep transition-colors disabled:opacity-60">
+                    {generating === idea.title ? "Painting…" : "Paint this"}
+                  </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{idea.prompt}</p>
-                <button onClick={() => paintIdea(idea)} disabled={generating === idea.title}
-                  className="mt-3 w-full bg-ink text-paper eyebrow py-2 text-xs hover:bg-gold-deep transition-colors disabled:opacity-60">
-                  {generating === idea.title ? "Painting…" : "Paint this"}
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- TITLE EDITOR ---------------- */
+function TitleEditor({ painting, onSaved }: { painting: Painting; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(painting.title);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setValue(painting.title); }, [painting.title]);
+
+  const save = async () => {
+    const next = value.trim();
+    if (!next || next === painting.title) { setEditing(false); return; }
+    setSaving(true);
+    const { error } = await supabase.from("paintings").update({ title: next }).eq("id", painting.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Title updated.");
+    setEditing(false);
+    onSaved();
+  };
+
+  if (!editing) {
+    return (
+      <button onClick={() => setEditing(true)}
+        className="font-serif text-lg truncate text-left w-full hover:text-gold-deep transition-colors"
+        title="Click to rename">
+        {painting.title} <span className="text-[0.6rem] text-muted-foreground align-middle">✎</span>
+      </button>
+    );
+  }
+  return (
+    <div className="flex gap-1">
+      <input autoFocus value={value} onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setValue(painting.title); setEditing(false); } }}
+        className="flex-1 bg-transparent border-b border-ink py-1 font-serif text-lg focus:outline-none" />
+      <button onClick={save} disabled={saving} className="eyebrow text-[0.6rem] px-2 border border-ink hover:bg-ink hover:text-paper">
+        {saving ? "…" : "Save"}
+      </button>
+      <button onClick={() => { setValue(painting.title); setEditing(false); }} className="eyebrow text-[0.6rem] px-2 text-muted-foreground hover:text-ink">
+        ✕
+      </button>
     </div>
   );
 }
@@ -473,7 +553,7 @@ function PendingTab({ works, cats, onChange }: { works: Painting[]; cats: Catego
         <div key={p.id} className="border border-border bg-card overflow-hidden">
           <img src={p.image_url} alt={p.title} className="w-full h-auto" />
           <div className="p-4 space-y-3">
-            <div className="font-serif text-lg">{p.title}</div>
+            <TitleEditor painting={p} onSaved={onChange} />
             <p className="text-xs text-muted-foreground line-clamp-3">{p.prompt}</p>
             <select value={p.category_id ?? ""} onChange={(e) => updateCat(p, e.target.value)}
               className="w-full bg-transparent border border-border p-2 text-xs focus:outline-none focus:border-ink">
@@ -565,7 +645,7 @@ function LibraryTab({ works, cats, onChange, onCatsChange }: {
                     {p.auto_suggested && <span className="absolute top-3 right-3 eyebrow bg-gold-deep text-paper px-2 py-1 text-[0.6rem]">Suggested</span>}
                   </div>
                   <div className="p-4 space-y-2">
-                    <div className="font-serif text-lg truncate">{p.title}</div>
+                    <TitleEditor painting={p} onSaved={onChange} />
                     <select value={p.category_id ?? ""} onChange={(e) => moveCat(p, e.target.value)}
                       className="w-full bg-transparent border border-border p-1.5 text-xs focus:outline-none focus:border-ink">
                       <option value="">Uncategorized</option>

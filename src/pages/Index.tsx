@@ -121,6 +121,25 @@ export default function Index() {
           </div>
         </div>
 
+        {cats.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-10">
+            <button onClick={() => setActiveCat("all")}
+              className={`eyebrow text-xs px-4 py-2 transition-colors ${activeCat === "all" ? "bg-ink text-paper" : "border border-border hover:border-ink"}`}>
+              All
+            </button>
+            {cats.map((c) => {
+              const n = paintings.filter((p) => p.category_id === c.id).length;
+              if (n === 0) return null;
+              return (
+                <button key={c.id} onClick={() => setActiveCat(c.id)}
+                  className={`eyebrow text-xs px-4 py-2 transition-colors ${activeCat === c.id ? "bg-ink text-paper" : "border border-border hover:border-ink"}`}>
+                  {c.name} <span className="opacity-60 ml-1">{n}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {loading ? (
           <div className="text-muted-foreground">Loading collection…</div>
         ) : rest.length === 0 && !featured ? (

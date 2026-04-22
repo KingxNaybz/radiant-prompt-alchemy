@@ -29,7 +29,7 @@ interface Painting {
 }
 interface Idea { title: string; prompt: string; style?: string; category_slug?: string; aspect_ratio?: string; }
 
-type Tab = "create" | "remix" | "inspire" | "pending" | "library" | "marketplace";
+type Tab = "create" | "remix" | "inspire" | "mass" | "pending" | "library" | "marketplace";
 
 function getFunctionErrorMessage(error: unknown, data: unknown) {
   const payloadError = (data as { error?: unknown } | null)?.error;

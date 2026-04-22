@@ -47,7 +47,7 @@ export default function Auth() {
         <div className="eyebrow text-muted-foreground mb-4">Atelier Access</div>
         <h1 className="font-serif text-4xl mb-2">{mode === "in" ? "Sign in" : "Create account"}</h1>
         <p className="text-sm text-muted-foreground mb-8">
-          The studio is private. Only the owner may paint here.
+          The Velour Walls studio is private. Only the owner may paint here.
         </p>
         <form onSubmit={submit} className="space-y-4">
           <input

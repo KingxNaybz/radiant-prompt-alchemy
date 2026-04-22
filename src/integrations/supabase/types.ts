@@ -18,12 +18,16 @@ export type Database = {
         Row: {
           aspect_ratio: string
           created_at: string
+          external_id: string | null
+          final_prompt: string | null
           id: string
           image_url: string
           is_published: boolean
+          model: string | null
           owner_id: string
           price_cents: number | null
           prompt: string
+          provider: string | null
           style: string | null
           title: string
           updated_at: string
@@ -31,12 +35,16 @@ export type Database = {
         Insert: {
           aspect_ratio?: string
           created_at?: string
+          external_id?: string | null
+          final_prompt?: string | null
           id?: string
           image_url: string
           is_published?: boolean
+          model?: string | null
           owner_id: string
           price_cents?: number | null
           prompt: string
+          provider?: string | null
           style?: string | null
           title?: string
           updated_at?: string
@@ -44,12 +52,16 @@ export type Database = {
         Update: {
           aspect_ratio?: string
           created_at?: string
+          external_id?: string | null
+          final_prompt?: string | null
           id?: string
           image_url?: string
           is_published?: boolean
+          model?: string | null
           owner_id?: string
           price_cents?: number | null
           prompt?: string
+          provider?: string | null
           style?: string | null
           title?: string
           updated_at?: string

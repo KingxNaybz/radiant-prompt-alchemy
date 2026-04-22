@@ -1,4 +1,4 @@
-// Naybz painting engine — calls Lovable AI (Nano Banana 2) by default.
+// Velour Walls painting engine — calls Lovable AI (Nano Banana 2) by default.
 // Optionally uses an external OpenArt API key if the user has set one.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -47,7 +47,6 @@ Deno.serve(async (req) => {
     }
     const userId = userData.user.id;
 
-    // Verify owner role via service role
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: roleRow } = await admin
       .from("user_roles")
@@ -72,10 +71,12 @@ Deno.serve(async (req) => {
 
     const provider = body.provider ?? "lovable";
     const aspectRatio = body.aspect_ratio ?? "1:1";
-    const finalPrompt = `${body.prompt}\n\nStyle: ${body.style ?? "signature Naybz aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+    const finalPrompt = `${body.prompt}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
 
     let imageBytes: Uint8Array;
     let contentType = "image/png";
+    let modelUsed = "";
+    let externalId: string | null = null;
 
     if (provider === "openart") {
       const OPENART_API_KEY = Deno.env.get("OPENART_API_KEY");
@@ -85,7 +86,6 @@ Deno.serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      // Map aspect ratio to dimensions (square defaults to high res for 8K-style output)
       const dims =
         aspectRatio === "16:9"
           ? { width: 1820, height: 1024 }
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
           ? { width: 1024, height: 1820 }
           : { width: 1536, height: 1536 };
 
-      // Kick off OpenArt generation
+      modelUsed = body.model ?? "flux-pro";
       const create = await fetch("https://openart.ai/api/v1/text2image/creations", {
         method: "POST",
         headers: {
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           prompt: finalPrompt,
-          model: body.model ?? "flux-pro",
+          model: modelUsed,
           width: dims.width,
           height: dims.height,
           num_images: 1,
@@ -115,8 +115,8 @@ Deno.serve(async (req) => {
       const creationId =
         createJson?.id ?? createJson?.creation_id ?? createJson?.data?.id;
       if (!creationId) throw new Error("OpenArt: no creation id returned");
+      externalId = String(creationId);
 
-      // Poll for completion
       let url: string | undefined;
       for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
@@ -146,6 +146,7 @@ Deno.serve(async (req) => {
       imageBytes = new Uint8Array(await imgResp.arrayBuffer());
     } else {
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+      modelUsed = body.model ?? "google/gemini-3.1-flash-image-preview";
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -153,7 +154,7 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3.1-flash-image-preview",
+          model: modelUsed,
           messages: [{ role: "user", content: finalPrompt }],
           modalities: ["image", "text"],
         }),
@@ -184,7 +185,6 @@ Deno.serve(async (req) => {
       for (let i = 0; i < bin.length; i++) imageBytes[i] = bin.charCodeAt(i);
     }
 
-    // Upload to storage
     const ext = contentType.includes("jpeg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
     const path = `${userId}/${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await admin.storage
@@ -194,7 +194,6 @@ Deno.serve(async (req) => {
     const { data: pub } = admin.storage.from("paintings").getPublicUrl(path);
     const imageUrl = pub.publicUrl;
 
-    // Insert painting row
     const { data: painting, error: insErr } = await admin
       .from("paintings")
       .insert({
@@ -205,6 +204,10 @@ Deno.serve(async (req) => {
         aspect_ratio: aspectRatio,
         image_url: imageUrl,
         is_published: !!body.publish,
+        provider,
+        model: modelUsed,
+        external_id: externalId,
+        final_prompt: finalPrompt,
       })
       .select()
       .single();

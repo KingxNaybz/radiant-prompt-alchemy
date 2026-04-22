@@ -26,6 +26,9 @@ interface Painting {
   image_url: string;
   is_published: boolean;
   price_cents: number | null;
+  provider: string | null;
+  model: string | null;
+  external_id: string | null;
   created_at: string;
 }
 
@@ -39,9 +42,10 @@ export default function Studio() {
   const [publish, setPublish] = useState(false);
   const [painting, setPainting] = useState(false);
   const [works, setWorks] = useState<Painting[]>([]);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Atelier — Michael Naybz";
+    document.title = "Atelier — Velour Walls";
     if (isOwner) refresh();
   }, [isOwner]);
 
@@ -62,13 +66,14 @@ export default function Studio() {
         <div className="max-w-xl mx-auto py-32 px-6 text-center">
           <h1 className="font-serif text-4xl mb-3">Atelier locked</h1>
           <p className="text-muted-foreground">
-            Your account does not have studio access. The atelier is reserved for Michael Naybz.
+            Your account does not have studio access. The atelier is reserved for the owner of Velour Walls.
           </p>
         </div>
       </div>
     );
 
   const paint = async () => {
+    setErrorBanner(null);
     if (prompt.trim().length < 3) {
       toast.error("Describe the piece first.");
       return;
@@ -79,13 +84,23 @@ export default function Studio() {
         body: { prompt, title, style, aspect_ratio: ratio, provider, publish },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      const errMsg = (data as any)?.error;
+      if (errMsg) {
+        if (typeof errMsg === "string" && errMsg.includes("OPENART_API_KEY")) {
+          setErrorBanner("OpenArt key missing. Add OPENART_API_KEY in Cloud secrets to use OpenArt.");
+        }
+        throw new Error(errMsg);
+      }
       toast.success("Naybz finished a new piece.");
       setPrompt("");
       setTitle("");
       refresh();
     } catch (e: any) {
-      toast.error(e.message ?? "Painting failed");
+      const msg = e.message ?? "Painting failed";
+      if (typeof msg === "string" && msg.includes("OPENART_API_KEY")) {
+        setErrorBanner("OpenArt key missing. Add OPENART_API_KEY in Cloud secrets to use OpenArt.");
+      }
+      toast.error(msg);
     } finally {
       setPainting(false);
     }
@@ -107,6 +122,19 @@ export default function Studio() {
     else refresh();
   };
 
+  const providerBadge = (
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-1.5 border eyebrow text-[0.65rem] ${
+        provider === "openart"
+          ? "border-gold-deep text-gold-deep bg-gold-deep/5"
+          : "border-ink text-ink bg-ink/5"
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${provider === "openart" ? "bg-gold-deep" : "bg-ink"}`} />
+      {provider === "openart" ? "OpenArt · Your Credits" : "Lovable AI · Default"}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-paper text-ink">
       <SiteHeader />
@@ -117,9 +145,17 @@ export default function Studio() {
             <div className="eyebrow text-muted-foreground mb-2">Atelier</div>
             <h1 className="font-serif text-4xl">Paint.</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Describe the work. Naybz renders it in 8K.
+              Naybz, your personal painter. Describe the work — he renders it in 8K.
             </p>
+            <div className="mt-4">{providerBadge}</div>
           </div>
+
+          {errorBanner && (
+            <div className="border-l-4 border-destructive bg-destructive/5 p-4 text-sm">
+              <div className="eyebrow text-destructive mb-1">Engine error</div>
+              <p className="text-foreground">{errorBanner}</p>
+            </div>
+          )}
 
           <div className="space-y-3 border border-border p-5 bg-card">
             <input
@@ -166,7 +202,7 @@ export default function Studio() {
                   className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink"
                 >
                   <option value="lovable">Lovable AI (default)</option>
-                  <option value="openart">OpenArt (external)</option>
+                  <option value="openart">OpenArt (your credits)</option>
                 </select>
               </div>
             </div>
@@ -187,11 +223,6 @@ export default function Studio() {
             >
               {painting ? "Naybz is painting…" : "Paint it"}
             </button>
-            {provider === "openart" && (
-              <p className="text-xs text-muted-foreground">
-                Using your OpenArt credits via OPENART_API_KEY.
-              </p>
-            )}
           </div>
         </aside>
 
@@ -216,14 +247,30 @@ export default function Studio() {
                         Private
                       </span>
                     )}
+                    {p.provider && (
+                      <span
+                        className={`absolute top-3 right-3 eyebrow px-2 py-1 ${
+                          p.provider === "openart"
+                            ? "bg-gold-deep text-paper"
+                            : "bg-ink/80 text-paper"
+                        }`}
+                      >
+                        {p.provider === "openart" ? "OpenArt" : "Lovable"}
+                      </span>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex justify-between items-start gap-3">
-                      <div>
-                        <div className="font-serif text-lg">{p.title}</div>
-                        <div className="eyebrow text-muted-foreground mt-1">
+                      <div className="min-w-0">
+                        <div className="font-serif text-lg truncate">{p.title}</div>
+                        <div className="eyebrow text-muted-foreground mt-1 truncate">
                           {p.style} · {p.aspect_ratio}
                         </div>
+                        {p.model && (
+                          <div className="text-[0.65rem] text-muted-foreground mt-1 font-mono truncate">
+                            {p.model}{p.external_id ? ` · ${p.external_id.slice(0, 8)}` : ""}
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2 shrink-0">
                         <button

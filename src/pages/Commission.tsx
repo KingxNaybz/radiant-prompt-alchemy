@@ -16,7 +16,7 @@ export default function Commission() {
           with a concept and timeline.
         </p>
         <a
-          href="mailto:commissions@naybz.art"
+          href="mailto:commissions@velourwalls.art"
           className="mt-10 inline-block px-8 py-4 bg-ink text-paper eyebrow hover:bg-gold-deep transition-colors"
         >
           Begin a commission

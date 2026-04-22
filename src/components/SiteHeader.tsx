@@ -11,13 +11,14 @@ export default function SiteHeader() {
     <header className="border-b border-border bg-paper/80 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-5 flex items-center justify-between">
         <Link to="/" className="flex flex-col leading-none">
-          <span className="font-serif text-2xl md:text-3xl tracking-tight text-ink">
-            Michael <span className="italic text-gold-deep">Naybz</span>
+          <span className="font-serif text-2xl md:text-3xl tracking-[0.18em] uppercase text-ink">
+            Velour <span className="italic text-gold-deep tracking-normal normal-case">Walls</span>
           </span>
           <span className="eyebrow text-muted-foreground mt-1">Art That Moves The Soul</span>
         </Link>
-        <nav className="flex items-center gap-8 text-sm">
+        <nav className="flex items-center gap-6 md:gap-8 text-sm">
           <Link to="/" className="hover:text-gold-deep transition-colors">Gallery</Link>
+          <Link to="/buy" className="hover:text-gold-deep transition-colors">Buy Now</Link>
           <Link to="/commission" className="hover:text-gold-deep transition-colors">Commission</Link>
           {isOwner && (
             <Link

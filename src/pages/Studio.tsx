@@ -261,6 +261,7 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
   const [style, setStyle] = useState(STYLES[0]); const [ratio, setRatio] = useState("1:1");
   const [categoryId, setCategoryId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [affirmation, setAffirmation] = useState(""); const [affStyle, setAffStyle] = useState(AFFIRMATION_STYLES[0]);
 
   const onFile = (f?: File | null) => {
     if (!f) return;

@@ -31,6 +31,24 @@ interface Idea { title: string; prompt: string; style?: string; category_slug?: 
 
 type Tab = "create" | "remix" | "inspire" | "pending" | "library" | "marketplace";
 
+function getFunctionErrorMessage(error: unknown, data: unknown) {
+  const payloadError = (data as { error?: unknown } | null)?.error;
+  if (typeof payloadError === "string") return payloadError;
+
+  const context = (error as { context?: string } | null)?.context;
+  if (typeof context === "string") {
+    try {
+      const parsed = JSON.parse(context);
+      if (typeof parsed?.error === "string") return parsed.error;
+    } catch {
+      return context;
+    }
+  }
+
+  const message = (error as { message?: string } | null)?.message;
+  return typeof message === "string" ? message : "Failed";
+}
+
 export default function Studio() {
   const { user, isOwner, loading } = useAuth();
   const [tab, setTab] = useState<Tab>("create");
@@ -127,16 +145,20 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   const paint = async () => {
     setError(null);
     if (prompt.trim().length < 3) return toast.error("Describe the piece.");
+    if (provider === "openart") {
+      const message = 'OpenArt generation is not available from this Studio yet. Switch the Engine to "Lovable AI" to generate here.';
+      setError(message);
+      return toast.error(message);
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("paint", {
         body: { prompt, title, style, aspect_ratio: ratio, provider, publish, mode: "create", category_id: categoryId || null },
       });
-      if (error) throw error;
-      const errMsg = (data as any)?.error;
-      if (errMsg) {
-        if (typeof errMsg === "string" && errMsg.includes("OPENART_API_KEY")) setError("OpenArt key missing.");
-        throw new Error(errMsg);
+      if (error || (data as any)?.error) {
+        const message = getFunctionErrorMessage(error, data);
+        setError(message);
+        throw new Error(message);
       }
       toast.success("Naybz finished a new piece.");
       setPrompt(""); setTitle(""); onDone();
@@ -169,6 +191,17 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
             <option value="openart">OpenArt</option>
           </Select>
         </div>
+        <div className="flex items-center justify-between border border-border bg-secondary/40 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">Active engine</span>
+          <span className="eyebrow border border-border px-2 py-1">
+            {provider === "lovable" ? "Lovable AI" : "OpenArt"}
+          </span>
+        </div>
+        {provider === "openart" && (
+          <div className="border-l-4 border-destructive bg-destructive/5 p-3 text-sm">
+            OpenArt generation is not available from this Studio yet. Use Lovable AI to paint here.
+          </div>
+        )}
         <label className="flex items-center gap-2 text-sm pt-2">
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish to public gallery immediately

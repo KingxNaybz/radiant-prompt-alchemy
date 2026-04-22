@@ -29,6 +29,24 @@ const AFFIRMATION_STYLES = [
   "celestial constellation stars",
 ];
 
+// Crib-of-Art-inspired one-click style presets
+const STYLE_PRESETS: { key: string; label: string; blurb: string; cat?: string }[] = [
+  { key: "african_royalty",  label: "African Royalty",   blurb: "Beaded headwraps, gold leaf, regal portrait", cat: "african-royalty" },
+  { key: "chrome_metallic",  label: "Chrome & Metallic", blurb: "Liquid chrome waves, brushed gold impasto",   cat: "chrome-metallic" },
+  { key: "motivational",     label: "Motivational",      blurb: "Affirmation words painted into the figure",   cat: "motivational" },
+  { key: "graffiti",         label: "Graffiti",          blurb: "Drips, stencils, gold splatter, raw canvas",  cat: "graffiti" },
+  { key: "abstract_ocean",   label: "Abstract Ocean",    blurb: "Aerial seascape, golden molten waves",        cat: "abstract-ocean" },
+  { key: "modern_statement", label: "Modern Statement",  blurb: "Bold, ivory + black + gold accents",          cat: "modern-statement" },
+];
+
+const COMIC_LAYOUTS = [
+  { key: "single",    label: "Single splash" },
+  { key: "2x2",       label: "2 × 2 grid" },
+  { key: "3v",        label: "3 panels (vertical)" },
+  { key: "splash_2",  label: "Splash + 2" },
+  { key: "6grid",     label: "6-panel grid" },
+];
+
 interface Category { id: string; slug: string; name: string; sort_order: number; }
 interface Painting {
   id: string; title: string; prompt: string; style: string | null;
@@ -41,7 +59,7 @@ interface Painting {
 }
 interface Idea { title: string; prompt: string; style?: string; category_slug?: string; aspect_ratio?: string; }
 
-type Tab = "create" | "remix" | "inspire" | "mass" | "pending" | "library" | "marketplace";
+type Tab = "create" | "remix" | "inspire" | "mass" | "comic" | "pending" | "library" | "marketplace";
 
 function getFunctionErrorMessage(error: unknown, data: unknown) {
   const payloadError = (data as { error?: unknown } | null)?.error;

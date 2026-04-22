@@ -102,6 +102,7 @@ export default function Studio() {
               ["create", "Create"],
               ["remix", "Remix"],
               ["inspire", "Inspire"],
+              ["mass", "Mass Produce"],
               ["pending", `Pending (${pending.length})`],
               ["library", `Library (${approved.length})`],
               ["marketplace", "Marketplace"],

@@ -10,7 +10,18 @@ const corsHeaders = {
 interface SuggestBody {
   count?: number;          // default 3
   category_slug?: string;  // optional: bias toward a category
+  style_preset?: string;   // optional: Crib-style preset key
 }
+
+const PRESET_DIRECTIONS: Record<string, string> = {
+  african_royalty: "Regal African subjects with beaded headwraps, gold-leaf accents, ceremonial jewelry, mixed-media gallery painting.",
+  chrome_metallic: "Liquid chrome and brushed-gold abstract waves with painterly impasto and dramatic side-lighting.",
+  motivational: "Powerful silhouetted figure whose body is composed of legible affirmation words integrated as calligraphic tattoos.",
+  graffiti: "Raw urban canvas: drips, stencils, torn posters, gold-leaf splatter, Banksy-meets-Basquiat energy.",
+  abstract_ocean: "Aerial seascapes with golden molten waves crashing into navy and teal, palette-knife impasto.",
+  modern_statement: "Bold contemporary statement piece — single striking subject, ivory + black + gold accents, mixed-media texture.",
+  comic_marvel: "Modern Marvel-realism comic illustrations: photoreal anatomy, painted color, cinematic rim lighting, dynamic poses.",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -55,10 +66,13 @@ Deno.serve(async (req) => {
     const { data: cats } = await admin.from("categories").select("id, slug, name");
     const catList = cats ?? [];
 
+    const presetDirection = body.style_preset && PRESET_DIRECTIONS[body.style_preset]
+      ? `\nAll concepts MUST follow this visual direction: ${PRESET_DIRECTIONS[body.style_preset]}`
+      : "";
     // Ask Lovable AI to brainstorm prompts
     const sysPrompt = `You are Naybz's creative director for Velour Walls, a luxury fine-art atelier.
 Suggest ${count} brand-new museum-grade painting concepts. Each must be unique, evocative, and gallery-worthy.
-Pick a category from this list: ${catList.map((c) => c.slug).join(", ")}.
+Pick a category from this list: ${catList.map((c) => c.slug).join(", ")}.${presetDirection}
 Return ONLY a JSON array, no prose. Schema:
 [{"title": "...", "prompt": "...", "style": "...", "category_slug": "...", "aspect_ratio": "1:1|3:4|4:3|16:9"}]`;
 

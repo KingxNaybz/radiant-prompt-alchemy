@@ -35,10 +35,13 @@ interface PaintBody {
     | "graffiti"
     | "abstract_ocean"
     | "modern_statement"
-    | "comic_marvel";
+    | "comic_marvel"
+    | "high_gloss";
   // NEW: comic-specific options
   comic_layout?: "single" | "2x2" | "3v" | "splash_2" | "6grid";
   comic_script?: string; // optional: per-panel beats; if omitted we derive from prompt
+  // NEW: finish overlay — applies a high-gloss acrylic / resin print look on top of any style
+  finish?: "matte" | "high_gloss";
 }
 
 const STYLE_PRESETS: Record<string, string> = {

@@ -451,23 +451,76 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
           </button>
         </div>
         {ideas.length > 0 && (
-          <div className="mt-6 grid md:grid-cols-2 gap-4">
-            {ideas.map((idea, i) => (
-              <div key={i} className="border border-border p-4">
-                <div className="flex justify-between gap-2">
-                  <div className="font-serif text-lg">{idea.title}</div>
-                  <span className="eyebrow text-[0.6rem] text-gold-deep">{idea.category_slug}</span>
+          <>
+            <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm text-muted-foreground">{ideas.length} ideas ready.</div>
+              <button onClick={paintAllIdeas} disabled={generating !== null}
+                className="bg-gold-deep text-paper eyebrow px-5 py-2.5 text-xs hover:opacity-90 transition-opacity disabled:opacity-60">
+                {generating === "__all__" ? "Painting all…" : `Paint all ${ideas.length}`}
+              </button>
+            </div>
+            <div className="mt-4 grid md:grid-cols-2 gap-4">
+              {ideas.map((idea, i) => (
+                <div key={i} className="border border-border p-4">
+                  <div className="flex justify-between gap-2">
+                    <div className="font-serif text-lg">{idea.title}</div>
+                    <span className="eyebrow text-[0.6rem] text-gold-deep">{idea.category_slug}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{idea.prompt}</p>
+                  <button onClick={() => paintIdea(idea)} disabled={generating !== null}
+                    className="mt-3 w-full bg-ink text-paper eyebrow py-2 text-xs hover:bg-gold-deep transition-colors disabled:opacity-60">
+                    {generating === idea.title ? "Painting…" : "Paint this"}
+                  </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{idea.prompt}</p>
-                <button onClick={() => paintIdea(idea)} disabled={generating === idea.title}
-                  className="mt-3 w-full bg-ink text-paper eyebrow py-2 text-xs hover:bg-gold-deep transition-colors disabled:opacity-60">
-                  {generating === idea.title ? "Painting…" : "Paint this"}
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- TITLE EDITOR ---------------- */
+function TitleEditor({ painting, onSaved }: { painting: Painting; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(painting.title);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setValue(painting.title); }, [painting.title]);
+
+  const save = async () => {
+    const next = value.trim();
+    if (!next || next === painting.title) { setEditing(false); return; }
+    setSaving(true);
+    const { error } = await supabase.from("paintings").update({ title: next }).eq("id", painting.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Title updated.");
+    setEditing(false);
+    onSaved();
+  };
+
+  if (!editing) {
+    return (
+      <button onClick={() => setEditing(true)}
+        className="font-serif text-lg truncate text-left w-full hover:text-gold-deep transition-colors"
+        title="Click to rename">
+        {painting.title} <span className="text-[0.6rem] text-muted-foreground align-middle">✎</span>
+      </button>
+    );
+  }
+  return (
+    <div className="flex gap-1">
+      <input autoFocus value={value} onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setValue(painting.title); setEditing(false); } }}
+        className="flex-1 bg-transparent border-b border-ink py-1 font-serif text-lg focus:outline-none" />
+      <button onClick={save} disabled={saving} className="eyebrow text-[0.6rem] px-2 border border-ink hover:bg-ink hover:text-paper">
+        {saving ? "…" : "Save"}
+      </button>
+      <button onClick={() => { setValue(painting.title); setEditing(false); }} className="eyebrow text-[0.6rem] px-2 text-muted-foreground hover:text-ink">
+        ✕
+      </button>
     </div>
   );
 }

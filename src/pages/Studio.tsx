@@ -133,6 +133,7 @@ export default function Studio() {
               ["remix", "Remix"],
               ["inspire", "Inspire"],
               ["mass", "Mass Produce"],
+              ["comic", "Comic"],
               ["pending", `Pending (${pending.length})`],
               ["library", `Library (${approved.length})`],
               ["marketplace", "Marketplace"],
@@ -157,6 +158,7 @@ export default function Studio() {
           {tab === "remix" && <RemixTab cats={cats} onDone={refresh} setError={setErrorBanner} />}
           {tab === "inspire" && <InspireTab cats={cats} onDone={refresh} />}
           {tab === "mass" && <MassProduceTab cats={cats} onDone={refresh} />}
+          {tab === "comic" && <ComicTab cats={cats} onDone={refresh} setError={setErrorBanner} />}
           {tab === "pending" && <PendingTab works={pending} cats={cats} onChange={refresh} />}
           {tab === "library" && <LibraryTab works={approved} cats={cats} onChange={refresh} onCatsChange={refreshCats} />}
           {tab === "marketplace" && <MarketplaceTab works={approved} onChange={refresh} />}

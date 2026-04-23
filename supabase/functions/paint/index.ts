@@ -148,9 +148,9 @@ function extractPageImageUrl(html: string, pageUrl: string): string | null {
     /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image(?::src)?["'][^>]*>/i,
     /<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["'][^>]*>/i,
     /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']image_src["'][^>]*>/i,
-    /"image"\s*:\s*"(https?:\\/\\/[^"\\]+)"/i,
-    /"image"\s*:\s*\[\s*"(https?:\\/\\/[^"\\]+)"/i,
-    /"featured_image"\s*:\s*"(\/\/[^"\\]+)"/i,
+    new RegExp('"image"\\s*:\\s*"(https?:\\\\/\\\\/[^"\\\\]+)"', 'i'),
+    new RegExp('"image"\\s*:\\s*\\[\\s*"(https?:\\\\/\\\\/[^"\\\\]+)"', 'i'),
+    new RegExp('"featured_image"\\s*:\\s*"(\\/\\/[^"\\\\]+)"', 'i'),
   ];
 
   for (const pattern of patterns) {

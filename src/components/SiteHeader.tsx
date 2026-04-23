@@ -21,14 +21,24 @@ export default function SiteHeader() {
           <Link to="/buy" className="hover:text-gold-deep transition-colors">Buy Now</Link>
           <Link to="/commission" className="hover:text-gold-deep transition-colors">Commission</Link>
           {isOwner && (
-            <Link
-              to="/studio"
-              className={`px-3 py-1.5 border border-ink text-ink hover:bg-ink hover:text-paper transition-colors eyebrow ${
-                onStudio ? "bg-ink text-paper" : ""
-              }`}
-            >
-              Atelier
-            </Link>
+            <>
+              <Link
+                to="/studio"
+                className={`px-3 py-1.5 border border-ink text-ink hover:bg-ink hover:text-paper transition-colors eyebrow ${
+                  onStudio && loc.pathname === "/studio" ? "bg-ink text-paper" : ""
+                }`}
+              >
+                Atelier
+              </Link>
+              <Link
+                to="/studio/orders"
+                className={`px-3 py-1.5 border border-ink text-ink hover:bg-ink hover:text-paper transition-colors eyebrow ${
+                  loc.pathname === "/studio/orders" ? "bg-ink text-paper" : ""
+                }`}
+              >
+                Orders
+              </Link>
+            </>
           )}
           {!user ? (
             <Link to="/auth" className="eyebrow text-muted-foreground hover:text-ink">Sign in</Link>

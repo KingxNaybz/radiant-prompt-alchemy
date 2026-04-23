@@ -11,6 +11,7 @@ interface SuggestBody {
   count?: number;          // default 3
   category_slug?: string;  // optional: bias toward a category
   style_preset?: string;   // optional: Crib-style preset key
+  description?: string;    // optional: free-form direction from the user
 }
 
 const PRESET_DIRECTIONS: Record<string, string> = {
@@ -70,10 +71,13 @@ Deno.serve(async (req) => {
     const presetDirection = body.style_preset && PRESET_DIRECTIONS[body.style_preset]
       ? `\nAll concepts MUST follow this visual direction: ${PRESET_DIRECTIONS[body.style_preset]}`
       : "";
+    const userDescription = body.description?.trim()
+      ? `\nThe user specifically wants this kind of imagery — every concept MUST honor it: "${body.description.trim()}"`
+      : "";
     // Ask Lovable AI to brainstorm prompts
     const sysPrompt = `You are Naybz's creative director for Velour Walls, a luxury fine-art atelier.
 Suggest ${count} brand-new museum-grade painting concepts. Each must be unique, evocative, and gallery-worthy.
-Pick a category from this list: ${catList.map((c) => c.slug).join(", ")}.${presetDirection}
+Pick a category from this list: ${catList.map((c) => c.slug).join(", ")}.${presetDirection}${userDescription}
 Return ONLY a JSON array, no prose. Schema:
 [{"title": "...", "prompt": "...", "style": "...", "category_slug": "...", "aspect_ratio": "1:1|3:4|4:3|16:9"}]`;
 
@@ -84,9 +88,10 @@ Return ONLY a JSON array, no prose. Schema:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: sysPrompt },
-          { role: "user", content: body.category_slug
-              ? `Lean toward category: ${body.category_slug}.`
-              : "Mix several categories." },
+          { role: "user", content: [
+              body.category_slug ? `Lean toward category: ${body.category_slug}.` : "Mix several categories.",
+              body.description?.trim() ? `User direction: ${body.description.trim()}` : "",
+            ].filter(Boolean).join(" ") },
         ],
         response_format: { type: "json_object" },
       }),

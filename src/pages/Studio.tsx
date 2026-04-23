@@ -830,6 +830,7 @@ function MarketplaceTab({ works, onChange }: { works: Painting[]; onChange: () =
 function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void; }) {
   const [categorySlug, setCategorySlug] = useState<string>(cats[0]?.slug ?? "");
   const [count, setCount] = useState<number>(10);
+  const [description, setDescription] = useState<string>("");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; created: number }>({ done: 0, total: 0, created: 0 });
 
@@ -849,7 +850,7 @@ function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void
       while (remaining > 0) {
         const c = Math.min(chunkSize, remaining);
         const { data, error } = await supabase.functions.invoke("suggest-art", {
-          body: { count: c, category_slug: categorySlug },
+          body: { count: c, category_slug: categorySlug, description: description.trim() || undefined },
         });
         if (error || (data as any)?.error) {
           const msg = getFunctionErrorMessage(error, data);
@@ -900,6 +901,19 @@ function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void
             </button>
           </div>
         </div>
+        <div>
+          <label className="eyebrow text-muted-foreground text-[0.6rem]">Describe the photos you want (optional)</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. Moody black-and-white portraits of jazz musicians with smoke and gold accents, vertical orientation, painterly oil texture."
+            rows={3}
+            className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm resize-y"
+          />
+          <p className="text-[0.65rem] text-muted-foreground mt-1">
+            The AI will steer every piece in this batch toward your description while staying inside the chosen category.
+          </p>
+        </div>
         {running && (
           <div className="space-y-2">
             <div className="h-2 bg-secondary border border-border overflow-hidden">
@@ -919,123 +933,6 @@ function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void
   );
 }
 
-/* ---------------- helpers ---------------- */
-function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode; }) {
-  return (
-    <div>
-      <label className="eyebrow text-muted-foreground text-[0.6rem]">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm">
-        {children}
-      </select>
-    </div>
-  );
-}
-function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode; }) {
-  return (
-    <button onClick={onClick}
-      className={`eyebrow text-xs px-3 py-1.5 transition-colors ${active ? "bg-ink text-paper" : "border border-border hover:border-ink"}`}>
-      {children}
-    </button>
-  );
-}
-
-/* ---------------- COMIC ---------------- */
-function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => void; setError: (e: string | null) => void; }) {
-  const [title, setTitle] = useState("");
-  const [prompt, setPrompt] = useState("");
-  const [script, setScript] = useState("");
-  const [layout, setLayout] = useState<string>("2x2");
-  const [ratio, setRatio] = useState("3:4");
-  const [publish, setPublish] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [categoryId, setCategoryId] = useState<string>(() => cats.find((c) => c.slug === "comics")?.id ?? "");
-
-  useEffect(() => {
-    if (!categoryId) {
-      const c = cats.find((cc) => cc.slug === "comics");
-      if (c) setCategoryId(c.id);
-    }
-  }, [cats, categoryId]);
-
-  const generate = async () => {
-    setError(null);
-    if (prompt.trim().length < 5) return toast.error("Describe the scene or story.");
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("paint", {
-        body: {
-          mode: "comic",
-          prompt, title,
-          aspect_ratio: ratio,
-          publish,
-          category_id: categoryId || null,
-          comic_layout: layout,
-          comic_script: script.trim() || undefined,
-          style_preset: "comic_marvel",
-        },
-      });
-      if (error || (data as { error?: string } | null)?.error) {
-        const msg = getFunctionErrorMessage(error, data) ?? "Failed to draw the comic.";
-        setError(msg);
-        toast.error(msg);
-        return;
-      }
-      toast.success("Comic page rendered.");
-      setPrompt(""); setTitle(""); setScript("");
-      onDone();
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed";
-      toast.error(msg);
-    } finally { setLoading(false); }
-  };
-
-  return (
-    <div className="grid lg:grid-cols-12 gap-8">
-      <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
-        <div className="eyebrow text-muted-foreground">Realistic Comic Page</div>
-        <p className="text-xs text-muted-foreground">
-          Modern Marvel-realism: photoreal anatomy, cinematic lighting, painted color, subtle ink. Pick a layout, write a story or per-panel beats, and Naybz renders the full page in one image.
-        </p>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Page title (optional)"
-          className="w-full bg-transparent border-b border-border py-2 focus:outline-none focus:border-ink font-serif text-lg" />
-        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3}
-          placeholder="Overall scene / synopsis — e.g. A hooded vigilante chases an escaped tech-thief across a neon-lit Tokyo rooftop at midnight."
-          className="w-full bg-transparent border border-border p-3 text-sm focus:outline-none focus:border-ink resize-none" />
-        <textarea value={script} onChange={(e) => setScript(e.target.value)} rows={6}
-          placeholder={"Optional per-panel script. Example for 2×2:\nPanel 1: Wide — vigilante crouched on a rooftop, rain falling. Caption: \"Tokyo. 03:14.\"\nPanel 2: Close-up — thief glances back. SFX: TUMP TUMP.\nPanel 3: Action — vigilante leaps the gap. Dialogue (vigilante): \"End of the line.\"\nPanel 4: Splash — collision mid-air, lightning behind them."}
-          className="w-full bg-transparent border border-border p-3 text-xs font-mono focus:outline-none focus:border-ink resize-none" />
-        <div className="grid grid-cols-2 gap-3">
-          <Select label="Layout" value={layout} onChange={setLayout}>
-            {COMIC_LAYOUTS.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
-          </Select>
-          <Select label="Format" value={ratio} onChange={setRatio}>
-            {RATIOS.map((r) => <option key={r}>{r}</option>)}
-          </Select>
-          <Select label="Category" value={categoryId} onChange={setCategoryId}>
-            <option value="">Uncategorized</option>
-            {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </Select>
-        </div>
-        <label className="flex items-center gap-2 text-sm pt-2">
-          <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
-          Publish to public gallery immediately
-        </label>
-        <button onClick={generate} disabled={loading}
-          className="w-full bg-ink text-paper eyebrow py-3.5 hover:bg-gold-deep transition-colors disabled:opacity-60">
-          {loading ? "Naybz is inking the page…" : "Render comic page"}
-        </button>
-        <p className="text-[0.65rem] text-muted-foreground italic border-t border-border pt-2">
-          Tip: comic pages use a higher-fidelity image model — render time can be 30–90 seconds per page.
-        </p>
-      </div>
-      <div className="lg:col-span-7 border border-dashed border-border p-12 text-center text-muted-foreground self-start">
-        <p className="font-serif italic text-2xl">Your comic page appears here.</p>
-        <p className="mt-2 text-sm">Single splash, 2×2, 3-panel, splash + 2, or full 6-panel grid — your call.</p>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------- SUPPLIERS ---------------- */
 interface Supplier {
@@ -1266,3 +1163,93 @@ function SuppliersTab() {
     </div>
   );
 }
+
+/* ---------------- shared helpers ---------------- */
+function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode; }) {
+  return (
+    <div>
+      <label className="eyebrow text-muted-foreground text-[0.6rem]">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm">
+        {children}
+      </select>
+    </div>
+  );
+}
+
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode; }) {
+  return (
+    <button onClick={onClick}
+      className={`eyebrow text-xs px-3 py-1.5 transition-colors ${active ? "bg-ink text-paper" : "border border-border hover:border-ink"}`}>
+      {children}
+    </button>
+  );
+}
+
+/* ---------------- COMIC ---------------- */
+function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => void; setError: (e: string | null) => void; }) {
+  const [categorySlug, setCategorySlug] = useState<string>(cats[0]?.slug ?? "");
+  const [prompt, setPrompt] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!categorySlug && cats[0]?.slug) setCategorySlug(cats[0].slug);
+  }, [cats, categorySlug]);
+
+  const run = async () => {
+    if (!prompt.trim()) return toast.error("Describe the comic concept.");
+    setBusy(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("paint", {
+        body: {
+          prompt: prompt.trim(),
+          category_slug: categorySlug,
+          style_preset: "comic_marvel",
+        },
+      });
+      if (error || (data as any)?.error) {
+        setError(getFunctionErrorMessage(error, data));
+        return;
+      }
+      toast.success("Comic page painted — find it in Pending.");
+      setPrompt("");
+      onDone();
+    } catch (e: any) {
+      setError(e.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="border border-border bg-card p-6 space-y-4">
+        <div>
+          <div className="eyebrow text-muted-foreground mb-1">Comic mode · Modern Marvel realism</div>
+          <p className="text-sm text-muted-foreground">
+            Photoreal anatomy, painted color, cinematic rim lighting, dynamic poses. Output lands in Pending for approval.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Select label="Category / Theme" value={categorySlug} onChange={setCategorySlug}>
+            {cats.length === 0 && <option value="">No categories</option>}
+            {cats.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+          </Select>
+          <div className="md:col-span-2">
+            <label className="eyebrow text-muted-foreground text-[0.6rem]">Concept</label>
+            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              placeholder="e.g. Lone hero on a rain-soaked rooftop, neon city below, cape catching wind."
+              className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm resize-y" />
+          </div>
+        </div>
+        <button onClick={run} disabled={busy}
+          className="bg-ink text-paper eyebrow py-3 px-6 hover:bg-gold-deep transition-colors disabled:opacity-60">
+          {busy ? "Painting…" : "Paint comic page"}
+        </button>
+      </div>
+    </div>
+  );
+}
+

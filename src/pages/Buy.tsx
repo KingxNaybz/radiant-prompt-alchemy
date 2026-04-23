@@ -273,15 +273,58 @@ export default function Buy() {
             placeholder="Shipping address"
             className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink resize-none"
           />
+
+          {/* PAYMENT METHOD */}
+          <div className="pt-2">
+            <div className="eyebrow text-muted-foreground mb-3 text-xs">Payment method</div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("card")}
+                className={`text-left p-4 border-2 transition-all ${
+                  paymentMethod === "card"
+                    ? "border-gold-deep bg-card shadow-frame"
+                    : "border-border hover:border-ink"
+                }`}
+              >
+                <div className="font-serif text-lg">Pay with card</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Card authorized now. Charged only after the studio approves your order.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("wire")}
+                className={`text-left p-4 border-2 transition-all ${
+                  paymentMethod === "wire"
+                    ? "border-gold-deep bg-card shadow-frame"
+                    : "border-border hover:border-ink"
+                }`}
+              >
+                <div className="font-serif text-lg">Wire / bank transfer</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  We'll review and email an invoice with wire details within 24 hours.
+                </div>
+              </button>
+            </div>
+          </div>
+
           <button
-            disabled={!selected}
+            disabled={!selected || submitting}
             className="w-full bg-ink text-paper eyebrow py-4 hover:bg-gold-deep transition-colors disabled:opacity-50"
           >
-            {selected ? `Place order · ${formatPrice(currentPriceCents)}` : "Choose a piece first"}
+            {!selected
+              ? "Choose a piece first"
+              : submitting
+                ? "Processing…"
+                : paymentMethod === "card"
+                  ? `Continue to secure checkout · ${formatPrice(currentPriceCents)}`
+                  : `Request invoice · ${formatPrice(currentPriceCents)}`}
           </button>
           <p className="text-xs text-muted-foreground text-center">
-            Orders are reviewed by the studio and an invoice is sent within 24 hours.
-            Payment by card, bank transfer, or wire.
+            {paymentMethod === "card"
+              ? "Secure card authorization via Stripe. The studio reviews and matches the best print partner before your card is charged."
+              : "No payment is taken now. The studio sends wire instructions after reviewing your order."}
           </p>
         </form>
       </section>

@@ -758,6 +758,7 @@ function LibraryTab({ works, cats, onChange, onCatsChange }: {
                       </button>
                       <button onClick={() => remove(p)} className="text-xs eyebrow text-destructive px-2 hover:underline">Delete</button>
                     </div>
+                    <SupplierSubmit painting={p} />
                   </div>
                 </div>
               ))}

@@ -323,6 +323,33 @@ export default function Buy() {
               : "No payment is taken now. The studio sends wire instructions after reviewing your order."}
           </p>
         </form>
+
+        {/* EMBEDDED STRIPE CHECKOUT */}
+        {showCheckout && selected && paymentMethod === "card" && (
+          <div className="mt-8 border border-border bg-card p-4 md:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="eyebrow text-muted-foreground text-xs">Secure checkout</div>
+              <button
+                type="button"
+                onClick={() => setShowCheckout(false)}
+                className="text-xs underline text-muted-foreground hover:text-ink"
+              >
+                Cancel
+              </button>
+            </div>
+            <StripeEmbeddedCheckoutForm
+              paintingId={selected.id}
+              paintingTitle={selected.title}
+              finish={finish}
+              size={size}
+              amountCents={currentPriceCents}
+              customerName={name}
+              customerEmail={email}
+              shippingAddress={address}
+              returnUrl={`${window.location.origin}/order-success`}
+            />
+          </div>
+        )}
       </section>
 
       <SiteFooter />

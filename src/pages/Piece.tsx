@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import SignedImage from "@/components/SignedImage";
 
 export default function Piece() {
   const { id } = useParams();
@@ -41,7 +42,7 @@ export default function Piece() {
       <SiteHeader />
       <article className="max-w-[1400px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-12 gap-12">
         <div className="md:col-span-8">
-          <img src={p.image_url} alt={p.title} className="w-full shadow-press" />
+          <SignedImage src={p.image_url} alt={p.title} className="w-full shadow-press" signatureClassName="bottom-3 right-4 text-sm" />
         </div>
         <aside className="md:col-span-4 md:sticky md:top-28 self-start">
           <div className="eyebrow text-muted-foreground mb-3">Original Work</div>

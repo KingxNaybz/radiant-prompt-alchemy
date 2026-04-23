@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import SignedImage from "@/components/SignedImage";
 import { toast } from "sonner";
 
 interface Painting {
@@ -118,7 +119,7 @@ export default function Buy() {
                   }`}
                 >
                   <div className="overflow-hidden bg-secondary">
-                    <img
+                    <SignedImage
                       src={p.image_url}
                       alt={p.title}
                       loading="lazy"

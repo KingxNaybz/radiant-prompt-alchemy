@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
 import { toast } from "sonner";
+import { FINISHES, priceFor, formatPrice, startingPriceCents } from "@/lib/pricing";
 
 interface Painting {
   id: string;
@@ -15,36 +16,17 @@ interface Painting {
   price_cents: number | null;
 }
 
-const FINISHES = [
-  {
-    name: "Gallery Canvas",
-    desc: "Hand-stretched cotton canvas, museum-wrapped on a kiln-dried frame. Ready to hang.",
-    sizes: ["18×24″ — $189", "24×36″ — $289", "40×60″ — $549"],
-    badge: "Bestseller",
-  },
-  {
-    name: "Tempered Glass",
-    desc: "UV-printed onto 6mm tempered glass with float mounts. Mirror-finish depth.",
-    sizes: ["20×30″ — $329", "30×45″ — $499", "48×72″ — $899"],
-    badge: "Premium",
-  },
-  {
-    name: "Acrylic Face-Mount",
-    desc: "1/4″ acrylic face-mount with dibond backing. Gallery-grade clarity.",
-    sizes: ["20×30″ — $349", "30×45″ — $529", "48×72″ — $949"],
-    badge: "Editor's pick",
-  },
-];
-
 export default function Buy() {
   const [paintings, setPaintings] = useState<Painting[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Painting | null>(null);
   const [finish, setFinish] = useState(FINISHES[0].name);
-  const [size, setSize] = useState(FINISHES[0].sizes[0]);
+  const [size, setSize] = useState(FINISHES[0].sizes[0].label);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+
+  const currentPriceCents = priceFor(finish, size);
 
   useEffect(() => {
     document.title = "Buy Now — Velour Walls";
@@ -69,7 +51,8 @@ export default function Buy() {
     const body =
       `Piece: ${selected.title} (${selected.id})\n` +
       `Finish: ${finish}\n` +
-      `Size: ${size}\n\n` +
+      `Size: ${size}\n` +
+      `Total: ${formatPrice(currentPriceCents)}\n\n` +
       `Name: ${name}\nEmail: ${email}\n\nShipping address:\n${address}`;
     window.location.href = `mailto:orders@velourwalls.art?subject=${encodeURIComponent(
       subject,
@@ -128,9 +111,14 @@ export default function Buy() {
                   </div>
                   <div className="p-3 bg-card">
                     <div className="font-serif text-base truncate">{p.title}</div>
-                    {p.style && (
-                      <div className="eyebrow text-muted-foreground mt-1 truncate">{p.style}</div>
-                    )}
+                    <div className="flex items-center justify-between mt-1">
+                      {p.style ? (
+                        <div className="eyebrow text-muted-foreground truncate">{p.style}</div>
+                      ) : <span />}
+                      <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
+                        from {formatPrice(startingPriceCents)}
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
@@ -146,12 +134,13 @@ export default function Buy() {
           <div className="grid md:grid-cols-3 gap-6">
             {FINISHES.map((f) => {
               const active = finish === f.name;
+              const fromCents = Math.min(...f.sizes.map((s) => Math.round(s.basePriceCents * f.multiplier)));
               return (
                 <button
                   key={f.name}
                   onClick={() => {
                     setFinish(f.name);
-                    setSize(f.sizes[0]);
+                    setSize(f.sizes[0].label);
                   }}
                   className={`text-left p-6 border-2 bg-card transition-all ${
                     active ? "border-gold-deep shadow-frame" : "border-border hover:border-ink"
@@ -162,17 +151,25 @@ export default function Buy() {
                     <span className="eyebrow text-gold-deep text-[0.6rem]">{f.badge}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">{f.desc}</p>
+                  <div className="eyebrow text-xs text-muted-foreground mb-2">
+                    From <span className="text-gold-deep">{formatPrice(fromCents)}</span>
+                  </div>
                   <ul className="space-y-1 text-sm">
-                    {f.sizes.map((s) => (
-                      <li
-                        key={s}
-                        className={`hairline pt-2 ${
-                          active && size === s ? "text-gold-deep font-medium" : ""
-                        }`}
-                      >
-                        {s}
-                      </li>
-                    ))}
+                    {f.sizes.map((s) => {
+                      const p = Math.round(s.basePriceCents * f.multiplier);
+                      const isActive = active && size === s.label;
+                      return (
+                        <li
+                          key={s.label}
+                          className={`hairline pt-2 flex justify-between ${
+                            isActive ? "text-gold-deep font-medium" : ""
+                          }`}
+                        >
+                          <span>{s.label}</span>
+                          <span>{formatPrice(p)}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </button>
               );
@@ -183,19 +180,23 @@ export default function Buy() {
           <div className="mt-8">
             <div className="eyebrow text-muted-foreground mb-2">03 · Size</div>
             <div className="flex flex-wrap gap-3">
-              {FINISHES.find((f) => f.name === finish)?.sizes.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSize(s)}
-                  className={`px-4 py-2 border eyebrow text-xs transition-colors ${
-                    size === s
-                      ? "bg-ink text-paper border-ink"
-                      : "border-border hover:border-ink"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
+              {FINISHES.find((f) => f.name === finish)?.sizes.map((s) => {
+                const p = priceFor(finish, s.label);
+                const isActive = size === s.label;
+                return (
+                  <button
+                    key={s.label}
+                    onClick={() => setSize(s.label)}
+                    className={`px-4 py-2 border eyebrow text-xs transition-colors ${
+                      isActive
+                        ? "bg-ink text-paper border-ink"
+                        : "border-border hover:border-ink"
+                    }`}
+                  >
+                    {s.label} · {formatPrice(p)}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -214,6 +215,9 @@ export default function Buy() {
               <div className="eyebrow text-muted-foreground text-[0.65rem] mt-1">
                 {finish} · {size}
               </div>
+            </div>
+            <div className="font-serif text-2xl text-gold-deep">
+              {formatPrice(currentPriceCents)}
             </div>
           </div>
         )}
@@ -246,7 +250,7 @@ export default function Buy() {
             disabled={!selected}
             className="w-full bg-ink text-paper eyebrow py-4 hover:bg-gold-deep transition-colors disabled:opacity-50"
           >
-            {selected ? "Place order" : "Choose a piece first"}
+            {selected ? `Place order · ${formatPrice(currentPriceCents)}` : "Choose a piece first"}
           </button>
           <p className="text-xs text-muted-foreground text-center">
             Orders are reviewed by the studio and an invoice is sent within 24 hours.

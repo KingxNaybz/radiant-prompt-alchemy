@@ -1163,3 +1163,93 @@ function SuppliersTab() {
     </div>
   );
 }
+
+/* ---------------- shared helpers ---------------- */
+function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode; }) {
+  return (
+    <div>
+      <label className="eyebrow text-muted-foreground text-[0.6rem]">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm">
+        {children}
+      </select>
+    </div>
+  );
+}
+
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode; }) {
+  return (
+    <button onClick={onClick}
+      className={`eyebrow text-xs px-3 py-1.5 transition-colors ${active ? "bg-ink text-paper" : "border border-border hover:border-ink"}`}>
+      {children}
+    </button>
+  );
+}
+
+/* ---------------- COMIC ---------------- */
+function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => void; setError: (e: string | null) => void; }) {
+  const [categorySlug, setCategorySlug] = useState<string>(cats[0]?.slug ?? "");
+  const [prompt, setPrompt] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!categorySlug && cats[0]?.slug) setCategorySlug(cats[0].slug);
+  }, [cats, categorySlug]);
+
+  const run = async () => {
+    if (!prompt.trim()) return toast.error("Describe the comic concept.");
+    setBusy(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("paint", {
+        body: {
+          prompt: prompt.trim(),
+          category_slug: categorySlug,
+          style_preset: "comic_marvel",
+        },
+      });
+      if (error || (data as any)?.error) {
+        setError(getFunctionErrorMessage(error, data));
+        return;
+      }
+      toast.success("Comic page painted — find it in Pending.");
+      setPrompt("");
+      onDone();
+    } catch (e: any) {
+      setError(e.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="border border-border bg-card p-6 space-y-4">
+        <div>
+          <div className="eyebrow text-muted-foreground mb-1">Comic mode · Modern Marvel realism</div>
+          <p className="text-sm text-muted-foreground">
+            Photoreal anatomy, painted color, cinematic rim lighting, dynamic poses. Output lands in Pending for approval.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Select label="Category / Theme" value={categorySlug} onChange={setCategorySlug}>
+            {cats.length === 0 && <option value="">No categories</option>}
+            {cats.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+          </Select>
+          <div className="md:col-span-2">
+            <label className="eyebrow text-muted-foreground text-[0.6rem]">Concept</label>
+            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              placeholder="e.g. Lone hero on a rain-soaked rooftop, neon city below, cape catching wind."
+              className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm resize-y" />
+          </div>
+        </div>
+        <button onClick={run} disabled={busy}
+          className="bg-ink text-paper eyebrow py-3 px-6 hover:bg-gold-deep transition-colors disabled:opacity-60">
+          {busy ? "Painting…" : "Paint comic page"}
+        </button>
+      </div>
+    </div>
+  );
+}
+

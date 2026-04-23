@@ -1,0 +1,36 @@
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface StripeEmbeddedCheckoutProps {
+  paintingId: string;
+  paintingTitle: string;
+  finish: string;
+  size: string;
+  amountCents: number;
+  customerName: string;
+  customerEmail: string;
+  shippingAddress: string;
+  returnUrl: string;
+}
+
+export function StripeEmbeddedCheckoutForm(props: StripeEmbeddedCheckoutProps) {
+  const fetchClientSecret = async (): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke(
+      "create-checkout-session",
+      { body: { ...props, environment: getStripeEnvironment() } },
+    );
+    if (error || !data?.clientSecret) {
+      throw new Error(error?.message || "Failed to create checkout session");
+    }
+    return data.clientSecret;
+  };
+
+  return (
+    <div id="checkout">
+      <EmbeddedCheckoutProvider stripe={getStripe()} options={{ fetchClientSecret }}>
+        <EmbeddedCheckout />
+      </EmbeddedCheckoutProvider>
+    </div>
+  );
+}

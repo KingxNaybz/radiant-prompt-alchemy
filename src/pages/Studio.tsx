@@ -377,8 +377,11 @@ function RemixTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
       <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
         <div className="eyebrow text-muted-foreground">Find online & remix</div>
         <input value={sourceUrl} onChange={(e) => { setSourceUrl(e.target.value); setFile(null); }}
-          placeholder="Paste image URL…"
+          placeholder="Paste image or product-page URL…"
           className="w-full bg-transparent border border-border p-2.5 text-sm focus:outline-none focus:border-ink" />
+        <p className="text-[0.7rem] text-muted-foreground italic">
+          You can paste a direct image link or a product / collection page — the engine will try to pull the main artwork image automatically.
+        </p>
         <div className="text-xs text-muted-foreground text-center">— or —</div>
         <label className="block border border-dashed border-border p-4 text-sm text-center cursor-pointer hover:border-ink">
           {file ? "Change file…" : "Upload image"}

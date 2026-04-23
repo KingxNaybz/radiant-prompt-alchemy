@@ -6,6 +6,8 @@ import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
 import { toast } from "sonner";
 import { FINISHES, priceFor, formatPrice, startingPriceCents } from "@/lib/pricing";
+import { StripeEmbeddedCheckoutForm } from "@/components/StripeEmbeddedCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 interface Painting {
   id: string;
@@ -27,6 +29,7 @@ export default function Buy() {
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "wire">("card");
   const [submitting, setSubmitting] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const currentPriceCents = priceFor(finish, size);
 
@@ -49,36 +52,28 @@ export default function Buy() {
       toast.error("Choose a piece first.");
       return;
     }
+    if (paymentMethod === "card") {
+      // Open Embedded Checkout — the form mounts and creates the session itself.
+      setShowCheckout(true);
+      return;
+    }
     setSubmitting(true);
-    const payload = {
-      paintingId: selected.id,
-      paintingTitle: selected.title,
-      finish,
-      size,
-      amountCents: currentPriceCents,
-      customerName: name,
-      customerEmail: email,
-      shippingAddress: address,
-    };
-
     try {
-      if (paymentMethod === "card") {
-        const { data, error } = await supabase.functions.invoke(
-          "create-checkout-session",
-          { body: { ...payload, origin: window.location.origin } },
-        );
-        if (error) throw error;
-        if (!data?.url) throw new Error("No checkout URL returned");
-        window.location.href = data.url;
-      } else {
-        const { error } = await supabase.functions.invoke(
-          "submit-wire-order",
-          { body: payload },
-        );
-        if (error) throw error;
-        toast.success("Order received. The studio will email an invoice within 24 hours.");
-        setName(""); setEmail(""); setAddress(""); setSelected(null);
-      }
+      const { error } = await supabase.functions.invoke("submit-wire-order", {
+        body: {
+          paintingId: selected.id,
+          paintingTitle: selected.title,
+          finish,
+          size,
+          amountCents: currentPriceCents,
+          customerName: name,
+          customerEmail: email,
+          shippingAddress: address,
+        },
+      });
+      if (error) throw error;
+      toast.success("Order received. The studio will email an invoice within 24 hours.");
+      setName(""); setEmail(""); setAddress(""); setSelected(null);
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Something went wrong.");

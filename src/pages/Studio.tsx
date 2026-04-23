@@ -830,6 +830,7 @@ function MarketplaceTab({ works, onChange }: { works: Painting[]; onChange: () =
 function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void; }) {
   const [categorySlug, setCategorySlug] = useState<string>(cats[0]?.slug ?? "");
   const [count, setCount] = useState<number>(10);
+  const [description, setDescription] = useState<string>("");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; created: number }>({ done: 0, total: 0, created: 0 });
 

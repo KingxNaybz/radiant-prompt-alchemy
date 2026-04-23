@@ -89,6 +89,151 @@ function bytesToDataUrl(buf: Uint8Array, ct: string): string {
   return `data:${ct};base64,${btoa(bin)}`;
 }
 
+const TRACKING_QUERY_KEYS = [
+  /^utm_/i,
+  /^fbclid$/i,
+  /^gclid$/i,
+  /^twclid$/i,
+  /^campaign_id$/i,
+  /^ad_id$/i,
+  /^tw_source$/i,
+  /^mc_cid$/i,
+  /^mc_eid$/i,
+];
+
+function stripTrackingParams(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    const keys = [...parsed.searchParams.keys()];
+    for (const key of keys) {
+      if (TRACKING_QUERY_KEYS.some((pattern) => pattern.test(key))) {
+        parsed.searchParams.delete(key);
+      }
+    }
+    return parsed.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .trim();
+}
+
+function toAbsoluteUrl(candidate: string, pageUrl: string): string | null {
+  try {
+    if (!candidate) return null;
+    if (candidate.startsWith("//")) {
+      const protocol = new URL(pageUrl).protocol || "https:";
+      return new URL(`${protocol}${candidate}`).toString();
+    }
+    return new URL(candidate, pageUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractPageImageUrl(html: string, pageUrl: string): string | null {
+  const patterns = [
+    /<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["'][^>]*>/i,
+    /<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image(?::src)?["'][^>]*>/i,
+    /<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["'][^>]*>/i,
+    /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']image_src["'][^>]*>/i,
+    /"image"\s*:\s*"(https?:\\/\\/[^"\\]+)"/i,
+    /"image"\s*:\s*\[\s*"(https?:\\/\\/[^"\\]+)"/i,
+    /"featured_image"\s*:\s*"(\/\/[^"\\]+)"/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    const raw = match?.[1];
+    if (!raw) continue;
+    const cleaned = decodeHtmlEntities(raw.replace(/\\\//g, "/"));
+    const absolute = toAbsoluteUrl(cleaned, pageUrl);
+    if (absolute) return absolute;
+  }
+
+  return null;
+}
+
+async function fetchRemote(url: string, accept: string): Promise<Response> {
+  const candidates = [url, stripTrackingParams(url)].filter((value, index, arr) => arr.indexOf(value) === index);
+  let lastResponse: Response | null = null;
+  let lastError: Error | null = null;
+
+  for (const candidate of candidates) {
+    const headerSets: HeadersInit[] = [
+      {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        Accept: accept,
+      },
+      {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        Accept: accept,
+        Referer: new URL(candidate).origin + "/",
+      },
+    ];
+
+    for (const headers of headerSets) {
+      try {
+        const response = await fetch(candidate, { headers, redirect: "follow" });
+        if (response.ok) return response;
+        lastResponse = response;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+      }
+    }
+  }
+
+  if (lastResponse) return lastResponse;
+  throw lastError ?? new Error("Failed to fetch remote asset");
+}
+
+async function resolvePageImageAsDataUrl(pageUrl: string): Promise<string> {
+  const pageResponse = await fetchRemote(pageUrl, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+  if (!pageResponse.ok) {
+    throw new Error(
+      `Failed to open source page (${pageResponse.status}). Please upload the image file instead, or use a direct image URL ending in .jpg/.png/.webp.`,
+    );
+  }
+
+  const html = await pageResponse.text();
+  const extractedImageUrl = extractPageImageUrl(html, pageUrl);
+  if (!extractedImageUrl) {
+    throw new Error(
+      "That link points to a webpage, but I couldn't detect its main artwork image. Please upload the image file instead, or paste a direct image URL ending in .jpg/.png/.webp.",
+    );
+  }
+
+  const imageResponse = await fetchRemote(extractedImageUrl, "image/*,*/*;q=0.8");
+  if (!imageResponse.ok) {
+    throw new Error(
+      `I found the artwork image on that page, but the host blocked downloading it (${imageResponse.status}). Please upload the image file instead.`,
+    );
+  }
+
+  const contentType = (imageResponse.headers.get("content-type") ?? "image/png").toLowerCase();
+  if (!contentType.startsWith("image/")) {
+    throw new Error(
+      "The page resolved to non-image content. Please upload the image file instead, or paste a direct image URL.",
+    );
+  }
+
+  const imageBuffer = new Uint8Array(await imageResponse.arrayBuffer());
+  return bytesToDataUrl(imageBuffer, contentType);
+}
+
 async function fetchAsDataUrl(
   url: string,
   admin: ReturnType<typeof createClient>,
@@ -103,29 +248,23 @@ async function fetchAsDataUrl(
     const buf = new Uint8Array(await data.arrayBuffer());
     return bytesToDataUrl(buf, ct);
   }
-  const lower = url.toLowerCase();
+  const normalizedUrl = stripTrackingParams(url);
+  const lower = normalizedUrl.toLowerCase();
+  const looksLikeDirectImage = /\.(png|jpe?g|webp|gif|bmp|svg)(?:[?#].*)?$/i.test(lower);
   const looksLikePage =
-    /(^|\.)etsy\.com|(^|\.)pinterest\.|(^|\.)amazon\.|(^|\.)ebay\.|\/listing\/|\/pin\/|\/dp\//.test(lower);
+    /(^|\.)etsy\.com|(^|\.)pinterest\.|(^|\.)amazon\.|(^|\.)ebay\.|(^|\.)myshopify\.com|(^|\.)shopify\.com|\/listing\/|\/pin\/|\/dp\/|\/products\/|\/collections\//.test(lower);
   if (looksLikePage) {
-    throw new Error(
-      "That link points to a webpage, not an image file. Right-click the image on the page and choose “Copy image address” (the URL should end in .jpg/.png/.webp), or upload the image directly.",
-    );
+    return await resolvePageImageAsDataUrl(normalizedUrl);
   }
-  const r = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      Accept: "image/*,*/*;q=0.8",
-      Referer: new URL(url).origin + "/",
-    },
-    redirect: "follow",
-  });
+
+  const r = await fetchRemote(normalizedUrl, looksLikeDirectImage ? "image/*,*/*;q=0.8" : "image/*,text/html,*/*;q=0.8");
   if (!r.ok) {
-    throw new Error(
-      `Failed to fetch source image (${r.status}). The site is blocking direct downloads. Please upload the image file instead, or use a direct image URL ending in .jpg/.png/.webp.`,
-    );
+    return await resolvePageImageAsDataUrl(normalizedUrl);
   }
   const ct = (r.headers.get("content-type") ?? "image/png").toLowerCase();
+  if (ct.includes("text/html") || ct.includes("application/xhtml+xml")) {
+    return await resolvePageImageAsDataUrl(normalizedUrl);
+  }
   if (!ct.startsWith("image/")) {
     throw new Error(
       `That URL returned ${ct || "non-image content"}, not an image. Please upload the image file or paste a direct image link.`,

@@ -38,6 +38,63 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          customer_email: string
+          customer_name: string
+          finish: string
+          id: string
+          notes: string | null
+          painting_id: string | null
+          painting_title: string
+          payment_method: string
+          payment_status: string
+          shipping_address: string
+          size: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          finish: string
+          id?: string
+          notes?: string | null
+          painting_id?: string | null
+          painting_title: string
+          payment_method: string
+          payment_status?: string
+          shipping_address: string
+          size: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          finish?: string
+          id?: string
+          notes?: string | null
+          painting_id?: string | null
+          painting_title?: string
+          payment_method?: string
+          payment_status?: string
+          shipping_address?: string
+          size?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       paintings: {
         Row: {
           aspect_ratio: string

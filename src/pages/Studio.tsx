@@ -758,6 +758,7 @@ function LibraryTab({ works, cats, onChange, onCatsChange }: {
                       </button>
                       <button onClick={() => remove(p)} className="text-xs eyebrow text-destructive px-2 hover:underline">Delete</button>
                     </div>
+                    <SupplierSubmit painting={p} />
                   </div>
                 </div>
               ))}
@@ -1106,6 +1107,104 @@ const SUPPLIERS: Supplier[] = [
     bestFor: "Wholesale runs of best-sellers once a SKU proves out. Lowest unit cost on big sizes.",
   },
 ];
+
+/* ---------------- SUPPLIER QUICK-SUBMIT ---------------- */
+const SUPPLIER_OPTIONS: { key: string; label: string; email: string }[] = [
+  { key: "gelato",     label: "Gelato",     email: "support@gelato.com" },
+  { key: "sensaria",   label: "Sensaria",   email: "info@sensaria.com" },
+  { key: "lumaprints", label: "Lumaprints", email: "support@lumaprints.com" },
+  { key: "gooten",     label: "Gooten",     email: "hello@gooten.com" },
+  { key: "printful",   label: "Printful",   email: "support@printful.com" },
+  { key: "cnd",        label: "Canvas N Decor", email: "orders@canvasndecor.com" },
+];
+
+function SupplierSubmit({ painting }: { painting: Painting }) {
+  const [open, setOpen] = useState(false);
+  const [supplier, setSupplier] = useState("gelato");
+  const [size, setSize] = useState("24x36");
+  const [finish, setFinish] = useState<"matte" | "high_gloss">("high_gloss");
+  const [busy, setBusy] = useState(false);
+
+  const downloadFile = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch(painting.image_url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${painting.title.replace(/[^a-z0-9]+/gi, "-")}-${size}-${finish}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Print file downloaded");
+    } catch {
+      toast.error("Could not download file");
+    } finally { setBusy(false); }
+  };
+
+  const emailSupplier = () => {
+    const s = SUPPLIER_OPTIONS.find((x) => x.key === supplier)!;
+    const subject = `Test order — "${painting.title}" (${size}, ${finish === "high_gloss" ? "High-Gloss Acrylic" : "Matte"})`;
+    const body =
+      `Hi ${s.label} team,\n\n` +
+      `We'd like to run a quality + shipping test for the following piece:\n\n` +
+      `• Title: ${painting.title}\n` +
+      `• Size: ${size} in\n` +
+      `• Finish: ${finish === "high_gloss" ? "High-Gloss Acrylic / Resin" : "Gallery Matte Canvas"}\n` +
+      `• Aspect: ${painting.aspect_ratio}\n` +
+      `• Print file: ${painting.image_url}\n\n` +
+      `Please confirm: max DPI accepted, turnaround time, ship-to options, and a sample-unit price.\n\n` +
+      `Thanks,\nVelour Walls`;
+    window.open(
+      `mailto:${s.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      "_blank"
+    );
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        className="w-full text-xs eyebrow border border-gold-deep text-gold-deep py-1.5 hover:bg-gold-deep hover:text-paper transition-colors">
+        Send to Supplier (test)
+      </button>
+    );
+  }
+
+  return (
+    <div className="border border-gold-deep/40 p-3 space-y-2 bg-paper/40">
+      <div className="grid grid-cols-2 gap-2">
+        <select value={supplier} onChange={(e) => setSupplier(e.target.value)}
+          className="bg-transparent border border-border p-1.5 text-xs">
+          {SUPPLIER_OPTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </select>
+        <select value={finish} onChange={(e) => setFinish(e.target.value as "matte" | "high_gloss")}
+          className="bg-transparent border border-border p-1.5 text-xs">
+          <option value="high_gloss">High-Gloss Acrylic</option>
+          <option value="matte">Gallery Matte</option>
+        </select>
+      </div>
+      <select value={size} onChange={(e) => setSize(e.target.value)}
+        className="w-full bg-transparent border border-border p-1.5 text-xs">
+        {["12x18", "16x24", "18x24", "24x36", "30x40", "36x48"].map((s) => (
+          <option key={s} value={s}>{s} in</option>
+        ))}
+      </select>
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={downloadFile} disabled={busy}
+          className="text-xs eyebrow border border-ink py-1.5 hover:bg-ink hover:text-paper transition-colors disabled:opacity-50">
+          {busy ? "…" : "Download file"}
+        </button>
+        <button onClick={emailSupplier}
+          className="text-xs eyebrow bg-gold-deep text-paper py-1.5 hover:opacity-90 transition-opacity">
+          Email supplier
+        </button>
+      </div>
+      <button onClick={() => setOpen(false)} className="w-full text-[0.65rem] text-muted-foreground hover:underline">
+        Close
+      </button>
+    </div>
+  );
+}
 
 function SuppliersTab() {
   return (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import SignedImage from "@/components/SignedImage";
 import { Link } from "react-router-dom";
 
 interface Painting {
@@ -78,10 +79,11 @@ export default function Index() {
           <div className="md:col-span-7">
             {featured ? (
               <Link to={`/piece/${featured.id}`} className="group block relative overflow-hidden shadow-press">
-                <img
+                <SignedImage
                   src={featured.image_url}
                   alt={featured.title}
                   className="w-full h-[60vh] md:h-[75vh] object-cover transition-transform duration-700 group-hover:scale-105"
+                  signatureClassName="bottom-3 right-4 text-xs md:text-sm"
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-ink/80 to-transparent text-paper">
                   <div className="eyebrow opacity-70">Featured Work</div>
@@ -156,7 +158,7 @@ export default function Index() {
                 className={`group block ${i % 5 === 0 ? "lg:col-span-2" : ""}`}
               >
                 <div className="overflow-hidden shadow-frame mb-5 bg-secondary">
-                  <img
+                  <SignedImage
                     src={p.image_url}
                     alt={p.title}
                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.03]"

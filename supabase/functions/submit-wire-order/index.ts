@@ -1,4 +1,5 @@
 // Records a wire/transfer order — no card capture. Studio sends invoice manually.
+// Also fires the "order received" email to the customer and a studio alert.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -6,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+const STUDIO_INBOX = "studio@velourwalls.art";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -64,8 +67,46 @@ Deno.serve(async (req) => {
       .single();
 
     if (error) throw new Error(error.message);
+    const orderId = data.id as string;
 
-    return new Response(JSON.stringify({ orderId: data.id }), {
+    const amountFormatted = `$${(amountCents / 100).toFixed(2)}`;
+    const sharedFields = {
+      customerName,
+      customerEmail,
+      paintingTitle,
+      finish,
+      size,
+      amountFormatted,
+      orderId: String(orderId).slice(0, 8),
+    };
+
+    // Fire-and-forget email sends
+    await Promise.all([
+      supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "order-received",
+          recipientEmail: customerEmail,
+          idempotencyKey: `order-received-${orderId}`,
+          templateData: sharedFields,
+        },
+      }).catch((e) => console.error("customer email failed", e)),
+      supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "new-order-alert",
+          recipientEmail: STUDIO_INBOX,
+          idempotencyKey: `new-order-alert-${orderId}`,
+          templateData: {
+            ...sharedFields,
+            paymentMethod: "wire",
+            paymentStatus: "awaiting_invoice",
+            shippingAddress,
+            notes: notes ?? undefined,
+          },
+        },
+      }).catch((e) => console.error("studio email failed", e)),
+    ]);
+
+    return new Response(JSON.stringify({ orderId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

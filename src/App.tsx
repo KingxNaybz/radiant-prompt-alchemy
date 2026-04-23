@@ -7,10 +7,12 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import Studio from "./pages/Studio.tsx";
+import StudioOrders from "./pages/StudioOrders.tsx";
 import Commission from "./pages/Commission.tsx";
 import Piece from "./pages/Piece.tsx";
 import Buy from "./pages/Buy.tsx";
 import OrderSuccess from "./pages/OrderSuccess.tsx";
+import Unsubscribe from "./pages/Unsubscribe.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,10 +26,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/studio" element={<Studio />} />
+          <Route path="/studio/orders" element={<StudioOrders />} />
           <Route path="/commission" element={<Commission />} />
           <Route path="/piece/:id" element={<Piece />} />
           <Route path="/buy" element={<Buy />} />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

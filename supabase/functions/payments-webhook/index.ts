@@ -1,6 +1,9 @@
-// Stripe webhook: marks orders as paid when the payment intent is captured.
+// Stripe webhook: marks orders as paid when the payment intent is captured,
+// and triggers the customer + studio order emails when card is authorized.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
+
+const STUDIO_INBOX = "studio@velourwalls.art";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
@@ -13,7 +16,62 @@ function getSupabase() {
   return _supabase;
 }
 
-async function updateOrderByIntent(intent: any, status: string) {
+function fmtUsd(cents: number | null | undefined): string {
+  if (cents == null) return "";
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+async function sendOrderEmails(orderId: string) {
+  const supabase = getSupabase();
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (error || !order) {
+    console.warn("sendOrderEmails: order not found", orderId, error);
+    return;
+  }
+
+  const amountFormatted = fmtUsd(order.amount_cents as number);
+  const sharedFields = {
+    customerName: order.customer_name,
+    customerEmail: order.customer_email,
+    paintingTitle: order.painting_title,
+    finish: order.finish,
+    size: order.size,
+    amountFormatted,
+    orderId: String(order.id).slice(0, 8),
+  };
+
+  // Customer "received / in studio review"
+  await supabase.functions.invoke("send-transactional-email", {
+    body: {
+      templateName: "order-received",
+      recipientEmail: order.customer_email,
+      idempotencyKey: `order-received-${order.id}`,
+      templateData: sharedFields,
+    },
+  }).catch((e) => console.error("customer email failed", e));
+
+  // Studio "new order" alert
+  await supabase.functions.invoke("send-transactional-email", {
+    body: {
+      templateName: "new-order-alert",
+      recipientEmail: STUDIO_INBOX,
+      idempotencyKey: `new-order-alert-${order.id}`,
+      templateData: {
+        ...sharedFields,
+        paymentMethod: order.payment_method,
+        paymentStatus: order.payment_status,
+        shippingAddress: order.shipping_address,
+        notes: order.notes,
+      },
+    },
+  }).catch((e) => console.error("studio email failed", e));
+}
+
+async function updateOrderByIntent(intent: any, status: string, sendEmails = false) {
   const orderId = intent?.metadata?.order_id;
   if (!orderId) {
     console.warn("payment_intent missing order_id metadata", intent?.id);
@@ -23,17 +81,20 @@ async function updateOrderByIntent(intent: any, status: string) {
     .from("orders")
     .update({ payment_status: status, stripe_payment_intent_id: intent.id })
     .eq("id", orderId);
+
+  if (sendEmails) {
+    await sendOrderEmails(orderId);
+  }
 }
 
 async function handle(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
   switch (event.type) {
     case "payment_intent.amount_capturable_updated":
-      // Card has been authorized — order is awaiting studio review/capture
-      await updateOrderByIntent(event.data.object, "authorized");
+      // Card authorized — order awaiting studio review/capture. Send emails now.
+      await updateOrderByIntent(event.data.object, "authorized", true);
       break;
     case "payment_intent.succeeded":
-      // Funds captured — order is paid
       await updateOrderByIntent(event.data.object, "paid");
       break;
     case "payment_intent.canceled":

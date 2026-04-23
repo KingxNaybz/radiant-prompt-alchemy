@@ -919,7 +919,20 @@ function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void
     </div>
   );
 }
-
+        <div>
+          <label className="eyebrow text-muted-foreground text-[0.6rem]">Describe the photos you want (optional)</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. Moody black-and-white portraits of jazz musicians with smoke and gold accents, vertical orientation, painterly oil texture."
+            rows={3}
+            className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm resize-y"
+          />
+          <p className="text-[0.65rem] text-muted-foreground mt-1">
+            The AI will steer every piece in this batch toward your description while staying inside the chosen category.
+          </p>
+        </div>
+        
 /* ---------------- helpers ---------------- */
 function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode; }) {
   return (

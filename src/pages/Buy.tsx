@@ -25,6 +25,8 @@ export default function Buy() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "wire">("card");
+  const [submitting, setSubmitting] = useState(false);
 
   const currentPriceCents = priceFor(finish, size);
 
@@ -41,23 +43,48 @@ export default function Buy() {
       });
   }, []);
 
-  const order = (e: React.FormEvent) => {
+  const order = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) {
       toast.error("Choose a piece first.");
       return;
     }
-    const subject = `Velour Walls Order — ${selected.title}`;
-    const body =
-      `Piece: ${selected.title} (${selected.id})\n` +
-      `Finish: ${finish}\n` +
-      `Size: ${size}\n` +
-      `Total: ${formatPrice(currentPriceCents)}\n\n` +
-      `Name: ${name}\nEmail: ${email}\n\nShipping address:\n${address}`;
-    window.location.href = `mailto:orders@velourwalls.art?subject=${encodeURIComponent(
-      subject,
-    )}&body=${encodeURIComponent(body)}`;
-    toast.success("Order draft opened. Send the email to confirm.");
+    setSubmitting(true);
+    const payload = {
+      paintingId: selected.id,
+      paintingTitle: selected.title,
+      finish,
+      size,
+      amountCents: currentPriceCents,
+      customerName: name,
+      customerEmail: email,
+      shippingAddress: address,
+    };
+
+    try {
+      if (paymentMethod === "card") {
+        const { data, error } = await supabase.functions.invoke(
+          "create-checkout-session",
+          { body: { ...payload, origin: window.location.origin } },
+        );
+        if (error) throw error;
+        if (!data?.url) throw new Error("No checkout URL returned");
+        window.location.href = data.url;
+      } else {
+        const { error } = await supabase.functions.invoke(
+          "submit-wire-order",
+          { body: payload },
+        );
+        if (error) throw error;
+        toast.success("Order received. The studio will email an invoice within 24 hours.");
+        setName(""); setEmail(""); setAddress(""); setSelected(null);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

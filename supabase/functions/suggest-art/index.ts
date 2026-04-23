@@ -11,6 +11,7 @@ interface SuggestBody {
   count?: number;          // default 3
   category_slug?: string;  // optional: bias toward a category
   style_preset?: string;   // optional: Crib-style preset key
+  description?: string;    // optional: free-form direction from the user
 }
 
 const PRESET_DIRECTIONS: Record<string, string> = {

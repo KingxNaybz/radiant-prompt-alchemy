@@ -1,10 +1,12 @@
 import { Link, useSearchParams } from "react-router-dom";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useEffect } from "react";
 
 export default function OrderSuccess() {
   const [params] = useSearchParams();
+  const sessionId = params.get("session_id");
   const orderId = params.get("order");
 
   useEffect(() => {
@@ -13,6 +15,7 @@ export default function OrderSuccess() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <PaymentTestModeBanner />
       <SiteHeader />
       <section className="max-w-2xl mx-auto px-6 py-32 text-center">
         <div className="eyebrow text-gold-deep mb-4">Authorization received</div>
@@ -22,9 +25,9 @@ export default function OrderSuccess() {
           with the best print partner, and capture payment only when production is
           confirmed. You'll get an email at every step.
         </p>
-        {orderId && (
+        {(orderId || sessionId) && (
           <div className="eyebrow text-xs text-muted-foreground mb-8">
-            Order reference · {orderId.slice(0, 8)}
+            Order reference · {(orderId ?? sessionId)!.slice(0, 12)}
           </div>
         )}
         <Link

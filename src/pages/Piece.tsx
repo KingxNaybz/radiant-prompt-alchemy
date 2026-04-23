@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
+import { FINISHES, formatPrice, startingPriceCents } from "@/lib/pricing";
 
 export default function Piece() {
   const { id } = useParams();
@@ -54,11 +55,37 @@ export default function Piece() {
             <div className="flex justify-between"><dt className="text-muted-foreground">Resolution</dt><dd>8K Ultra-Real</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">Edition</dt><dd>Limited / Signed</dd></div>
           </dl>
-          {p.price_cents != null && (
-            <div className="mt-8 font-serif text-3xl text-gold-deep">
-              ${(p.price_cents / 100).toLocaleString()}
+          <div className="mt-8">
+            <div className="eyebrow text-muted-foreground mb-1">Starting at</div>
+            <div className="font-serif text-3xl text-gold-deep">
+              {formatPrice(startingPriceCents)}
             </div>
-          )}
+          </div>
+
+          <div className="mt-6 border border-border bg-card p-4">
+            <div className="eyebrow text-muted-foreground mb-3 text-[0.65rem]">Pricing by finish & size</div>
+            <div className="space-y-4 text-sm">
+              {FINISHES.map((f) => (
+                <div key={f.name}>
+                  <div className="flex justify-between items-baseline">
+                    <div className="font-serif">{f.name}</div>
+                    <div className="eyebrow text-[0.6rem] text-gold-deep">{f.badge}</div>
+                  </div>
+                  <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                    {f.sizes.map((s) => {
+                      const p = Math.round(s.basePriceCents * f.multiplier);
+                      return (
+                        <li key={s.label} className="flex justify-between">
+                          <span>{s.label}</span>
+                          <span className="text-ink">{formatPrice(p)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
           <Link
             to="/buy"
             className="mt-8 inline-block w-full text-center px-6 py-3.5 bg-ink text-paper eyebrow hover:bg-gold-deep transition-colors"

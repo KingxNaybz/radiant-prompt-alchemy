@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
+import { formatPrice, startingPriceCents } from "@/lib/pricing";
 import { Link } from "react-router-dom";
 
 interface Painting {
@@ -172,9 +173,13 @@ export default function Index() {
                       <div className="eyebrow text-muted-foreground mt-1">{p.style}</div>
                     )}
                   </div>
-                  {p.price_cents != null && (
+                  {p.price_cents != null ? (
                     <div className="font-serif text-lg text-gold-deep">
                       ${(p.price_cents / 100).toLocaleString()}
+                    </div>
+                  ) : (
+                    <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
+                      from {formatPrice(startingPriceCents)}
                     </div>
                   )}
                 </div>

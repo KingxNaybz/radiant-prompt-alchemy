@@ -10,6 +10,7 @@ import Studio from "./pages/Studio.tsx";
 import Commission from "./pages/Commission.tsx";
 import Piece from "./pages/Piece.tsx";
 import Buy from "./pages/Buy.tsx";
+import OrderSuccess from "./pages/OrderSuccess.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/commission" element={<Commission />} />
           <Route path="/piece/:id" element={<Piece />} />
           <Route path="/buy" element={<Buy />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

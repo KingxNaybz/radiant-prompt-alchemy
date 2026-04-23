@@ -850,7 +850,7 @@ function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void
       while (remaining > 0) {
         const c = Math.min(chunkSize, remaining);
         const { data, error } = await supabase.functions.invoke("suggest-art", {
-          body: { count: c, category_slug: categorySlug },
+          body: { count: c, category_slug: categorySlug, description: description.trim() || undefined },
         });
         if (error || (data as any)?.error) {
           const msg = getFunctionErrorMessage(error, data);

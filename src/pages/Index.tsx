@@ -54,7 +54,7 @@ export default function Index() {
             <div className="eyebrow text-muted-foreground mb-6">Vol. I — The Atelier</div>
             <h1 className="font-serif text-5xl md:text-7xl leading-[0.95] text-balance">
               Directed by Naybz.<br />
-              <span className="italic text-gold-deep">Made to outlive you.</span>
+              <span className="italic text-gold-deep">Built to be remembered.</span>
             </h1>
             <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
               Velour Walls — hyper-real fine art on canvas, glass, and acrylic.

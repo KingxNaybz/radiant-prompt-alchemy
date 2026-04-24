@@ -5,8 +5,8 @@ import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
 
 const STUDIO_INBOX = "studio@velourwalls.art";
 
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
+let _supabase: any = null;
+function getSupabase(): any {
   if (!_supabase) {
     _supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,

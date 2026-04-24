@@ -5,7 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
 import { toast } from "sonner";
-import { FINISHES, priceFor, formatPrice, startingPriceCents } from "@/lib/pricing";
+import { FINISHES, priceFor, formatPrice, startingPriceCents, SIGNATURE_SURCHARGE_CENTS } from "@/lib/pricing";
 import { StripeEmbeddedCheckoutForm } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
@@ -28,10 +28,12 @@ export default function Buy() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "wire">("card");
+  const [signed, setSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const currentPriceCents = priceFor(finish, size);
+  const basePriceCents = priceFor(finish, size);
+  const currentPriceCents = basePriceCents + (signed ? SIGNATURE_SURCHARGE_CENTS : 0);
 
   useEffect(() => {
     document.title = "Buy Now — Velour Walls";
@@ -62,18 +64,19 @@ export default function Buy() {
       const { error } = await supabase.functions.invoke("submit-wire-order", {
         body: {
           paintingId: selected.id,
-          paintingTitle: selected.title,
+          paintingTitle: signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title,
           finish,
           size,
           amountCents: currentPriceCents,
           customerName: name,
           customerEmail: email,
           shippingAddress: address,
+          notes: signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
         },
       });
       if (error) throw error;
       toast.success("Order received. The studio will email an invoice within 24 hours.");
-      setName(""); setEmail(""); setAddress(""); setSelected(null);
+      setName(""); setEmail(""); setAddress(""); setSelected(null); setSigned(false);
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
@@ -125,7 +128,7 @@ export default function Buy() {
                   }`}
                 >
                   <div className="overflow-hidden bg-secondary">
-                    <SignedImage
+                    <img
                       src={p.image_url}
                       alt={p.title}
                       loading="lazy"
@@ -232,15 +235,33 @@ export default function Buy() {
 
         {selected && (
           <div className="flex gap-4 items-center border border-border p-4 mb-6 bg-card">
-            <img src={selected.image_url} alt={selected.title} className="w-20 h-20 object-cover" />
+            {signed ? (
+              <SignedImage
+                src={selected.image_url}
+                alt={selected.title}
+                wrapperClassName="w-20 h-20 shrink-0"
+                className="w-20 h-20 object-cover"
+                signatureClassName="bottom-1 right-1 text-[6px]"
+              />
+            ) : (
+              <img src={selected.image_url} alt={selected.title} className="w-20 h-20 object-cover" />
+            )}
             <div className="flex-1">
               <div className="font-serif text-lg">{selected.title}</div>
               <div className="eyebrow text-muted-foreground text-[0.65rem] mt-1">
                 {finish} · {size}
+                {signed && <span className="text-gold-deep"> · Hand-signed</span>}
               </div>
             </div>
-            <div className="font-serif text-2xl text-gold-deep">
-              {formatPrice(currentPriceCents)}
+            <div className="text-right">
+              <div className="font-serif text-2xl text-gold-deep">
+                {formatPrice(currentPriceCents)}
+              </div>
+              {signed && (
+                <div className="text-[0.65rem] text-muted-foreground mt-0.5">
+                  incl. +{formatPrice(SIGNATURE_SURCHARGE_CENTS)} signature
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -305,6 +326,44 @@ export default function Buy() {
             </div>
           </div>
 
+          {/* SIGNATURE ADD-ON — exclusive, opt-in mark of authenticity */}
+          <div className="pt-2">
+            <div className="eyebrow text-muted-foreground mb-3 text-xs">Artist's mark · optional</div>
+            <button
+              type="button"
+              onClick={() => setSigned((s) => !s)}
+              aria-pressed={signed}
+              className={`w-full text-left p-5 border-2 transition-all flex items-start gap-4 ${
+                signed
+                  ? "border-gold-deep bg-card shadow-frame"
+                  : "border-border hover:border-ink"
+              }`}
+            >
+              <div
+                className={`mt-1 h-5 w-5 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  signed ? "border-gold-deep bg-gold-deep" : "border-border"
+                }`}
+              >
+                {signed && <span className="block h-2 w-2 rounded-full bg-paper" />}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-serif text-lg">
+                    Hand-signed by <span className="italic">Naybz</span>
+                  </div>
+                  <span className="eyebrow text-gold-deep text-[0.6rem] whitespace-nowrap">
+                    +{formatPrice(SIGNATURE_SURCHARGE_CENTS)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  Reserved for collectors. The artist's mark is added by hand on the
+                  lower-right of the finished piece — a quiet seal of authenticity that
+                  most prints will never carry. Off by default.
+                </p>
+              </div>
+            </button>
+          </div>
+
           <button
             disabled={!selected || submitting}
             className="w-full bg-ink text-paper eyebrow py-4 hover:bg-gold-deep transition-colors disabled:opacity-50"
@@ -339,7 +398,7 @@ export default function Buy() {
             </div>
             <StripeEmbeddedCheckoutForm
               paintingId={selected.id}
-              paintingTitle={selected.title}
+              paintingTitle={signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title}
               finish={finish}
               size={size}
               amountCents={currentPriceCents}

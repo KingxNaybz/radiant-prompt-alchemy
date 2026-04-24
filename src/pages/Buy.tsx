@@ -398,7 +398,7 @@ export default function Buy() {
             </div>
             <StripeEmbeddedCheckoutForm
               paintingId={selected.id}
-              paintingTitle={selected.title}
+              paintingTitle={signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title}
               finish={finish}
               size={size}
               amountCents={currentPriceCents}

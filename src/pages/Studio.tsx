@@ -705,7 +705,7 @@ function PendingTab({ works, cats, onChange }: { works: Painting[]; cats: Catego
           <img src={p.image_url} alt={p.title} className="w-full h-auto" />
           <div className="p-4 space-y-3">
             <TitleEditor painting={p} onSaved={onChange} />
-            <p className="text-xs text-muted-foreground line-clamp-3">{p.prompt}</p>
+            <DescriptionEditor painting={p} onSaved={onChange} />
             <select value={p.category_id ?? ""} onChange={(e) => updateCat(p, e.target.value)}
               className="w-full bg-transparent border border-border p-2 text-xs focus:outline-none focus:border-ink">
               <option value="">Uncategorized</option>
@@ -797,6 +797,7 @@ function LibraryTab({ works, cats, onChange, onCatsChange }: {
                   </div>
                   <div className="p-4 space-y-2">
                     <TitleEditor painting={p} onSaved={onChange} />
+                    <DescriptionEditor painting={p} onSaved={onChange} />
                     <select value={p.category_id ?? ""} onChange={(e) => moveCat(p, e.target.value)}
                       className="w-full bg-transparent border border-border p-1.5 text-xs focus:outline-none focus:border-ink">
                       <option value="">Uncategorized</option>

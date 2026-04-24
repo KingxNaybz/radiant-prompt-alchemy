@@ -1,0 +1,2 @@
+UPDATE public.paintings SET image_url = 'https://xispoxjjjaevbxstrepr.supabase.co/storage/v1/object/public/paintings/bf4e6766-29b6-494e-b833-d2a4018620b6/944598ff-b4fd-499d-b725-ef6f4a2376cd-photoreal.png', updated_at = now() WHERE id = '4ccbe822-3cb6-4af7-9dc2-f8a8082401fc';
+UPDATE public.paintings SET image_url = 'https://xispoxjjjaevbxstrepr.supabase.co/storage/v1/object/public/paintings/bf4e6766-29b6-494e-b833-d2a4018620b6/ffc59061-7306-4194-8fe1-ca61070fee29-photoreal.png', updated_at = now() WHERE id = 'd463fbe7-645b-475a-b881-40248e3a8d39';

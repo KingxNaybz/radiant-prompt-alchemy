@@ -390,7 +390,11 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       }
       const aiJson = await aiResp.json();
       const dataUrl: string | undefined = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!dataUrl) throw new Error("No image returned");
+      if (!dataUrl) {
+        const textOut = aiJson?.choices?.[0]?.message?.content ?? "";
+        console.error("img-to-img: no image returned. model=", modelUsed, "text=", textOut);
+        throw new Error(`No image returned from model. ${textOut ? "Model said: " + String(textOut).slice(0, 240) : "Try rephrasing the prompt — it may have been blocked."}`);
+      }
       const m = dataUrl.match(/^data:(.+?);base64,(.+)$/);
       if (!m) throw new Error("Bad image payload");
       contentType = m[1];

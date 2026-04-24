@@ -363,6 +363,8 @@ export default function Buy() {
               </div>
             </button>
           </div>
+
+          <button
             disabled={!selected || submitting}
             className="w-full bg-ink text-paper eyebrow py-4 hover:bg-gold-deep transition-colors disabled:opacity-50"
           >

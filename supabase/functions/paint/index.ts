@@ -414,24 +414,50 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
         ? "google/gemini-3-pro-image-preview"
         : "google/gemini-3.1-flash-image-preview";
       modelUsed = body.model ?? defaultModel;
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: modelUsed,
-          messages: [{ role: "user", content: finalPrompt }],
-          modalities: ["image", "text"],
-        }),
-      });
+
+      // Try requested model, then fall back to flash if no image came back (model refusal / text-only response).
+      const callModel = async (model: string) => {
+        const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: "user", content: finalPrompt }],
+            modalities: ["image", "text"],
+          }),
+        });
+        return r;
+      };
+
+      let aiResp = await callModel(modelUsed);
       if (!aiResp.ok) {
         const t = await aiResp.text();
-        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Rate limited." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Out of AI credits." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Rate limited. Please wait a moment and try again." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Out of AI credits. Top up Lovable AI to continue generating." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         throw new Error(`AI gateway error ${aiResp.status}: ${t}`);
       }
-      const aiJson = await aiResp.json();
-      const dataUrl: string | undefined = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!dataUrl) throw new Error("No image returned");
+      let aiJson = await aiResp.json();
+      let dataUrl: string | undefined = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+      // Fallback: if pro/preview model returned no image, retry with flash.
+      if (!dataUrl && modelUsed !== "google/gemini-3.1-flash-image-preview") {
+        console.warn(`paint: no image from ${modelUsed}, retrying with flash. text=`, aiJson?.choices?.[0]?.message?.content);
+        const fallback = await callModel("google/gemini-3.1-flash-image-preview");
+        if (fallback.ok) {
+          aiJson = await fallback.json();
+          dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          if (dataUrl) modelUsed = "google/gemini-3.1-flash-image-preview";
+        }
+      }
+
+      if (!dataUrl) {
+        const textOut = aiJson?.choices?.[0]?.message?.content ?? "";
+        console.error("paint: no image returned. model=", modelUsed, "text=", textOut);
+        const hint = textOut
+          ? `Model declined: ${String(textOut).slice(0, 240)}`
+          : "The model returned no image. Try rephrasing the prompt — it may have been blocked by safety filters.";
+        return new Response(JSON.stringify({ error: hint, code: "NO_IMAGE" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       const m = dataUrl.match(/^data:(.+?);base64,(.+)$/);
       if (!m) throw new Error("Bad image payload");
       contentType = m[1];

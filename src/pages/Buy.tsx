@@ -128,7 +128,7 @@ export default function Buy() {
                   }`}
                 >
                   <div className="overflow-hidden bg-secondary">
-                    <SignedImage
+                    <img
                       src={p.image_url}
                       alt={p.title}
                       loading="lazy"

@@ -52,7 +52,7 @@ async function sendOrderEmails(orderId: string) {
       idempotencyKey: `order-received-${order.id}`,
       templateData: sharedFields,
     },
-  }).catch((e) => console.error("customer email failed", e));
+  }).catch((e: unknown) => console.error("customer email failed", e));
 
   // Studio "new order" alert
   await supabase.functions.invoke("send-transactional-email", {

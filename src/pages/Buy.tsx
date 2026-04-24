@@ -28,10 +28,12 @@ export default function Buy() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "wire">("card");
+  const [signed, setSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const currentPriceCents = priceFor(finish, size);
+  const basePriceCents = priceFor(finish, size);
+  const currentPriceCents = basePriceCents + (signed ? SIGNATURE_SURCHARGE_CENTS : 0);
 
   useEffect(() => {
     document.title = "Buy Now — Velour Walls";

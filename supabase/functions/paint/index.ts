@@ -115,6 +115,65 @@ function sanitizeModelDeclineText(text: string): string {
   return cleaned;
 }
 
+const ANALYSIS_PROMPT_PATTERN = /(###|\*\*|\[image generation request\]|artistic interpretation|visual style applied|here is the breakdown|weaponizing the void|the kinetic velocity of ink)/i;
+
+function compactWhitespace(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function stripPromptMarkup(prompt: string): string {
+  return compactWhitespace(
+    prompt
+      .replace(/\[image generation request\][\s\S]*$/i, " ")
+      .replace(/^here is (?:the )?(?:breakdown|artistic interpretation|analysis)[^\n.:]*[.:]?/i, " ")
+      .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+      .replace(/^\s*[-*•]\s+/gm, "")
+      .replace(/^\s*\d+[.)]\s+/gm, "")
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/[\t\r]+/g, " ")
+      .replace(/\n{2,}/g, "\n"),
+  );
+}
+
+async function condensePromptIfNeeded(prompt: string, apiKey: string | null): Promise<string> {
+  const stripped = stripPromptMarkup(prompt);
+  const needsCondense =
+    stripped.length > 500 ||
+    stripped.split(/\s+/).length > 90 ||
+    ANALYSIS_PROMPT_PATTERN.test(prompt);
+
+  if (!apiKey || !needsCondense) return stripped;
+
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Convert the user's text into one concise image-generation prompt. Preserve the subject, mood, colors, environment, and composition. Remove markdown, headings, explanations, bullets, and meta commentary. Return only the visual prompt in plain English, under 90 words.",
+          },
+          { role: "user", content: stripped },
+        ],
+      }),
+    });
+
+    if (!resp.ok) return stripped;
+    const json = await resp.json();
+    const condensed = stripPromptMarkup(
+      sanitizeModelDeclineText(extractModelTextContent(json?.choices?.[0]?.message?.content)),
+    );
+    return condensed || stripped;
+  } catch {
+    return stripped;
+  }
+}
+
 async function rewriteComicPromptIfNeeded(prompt: string, apiKey: string | null): Promise<string> {
   if (!apiKey || !COMIC_IP_PATTERN.test(prompt)) return prompt;
 
@@ -297,7 +356,7 @@ async function resolvePageImageAsDataUrl(pageUrl: string): Promise<string> {
 
 async function fetchAsDataUrl(
   url: string,
-  admin: ReturnType<typeof createClient>,
+  admin: any,
 ): Promise<string> {
   if (url.startsWith("data:")) return url;
   const m = url.match(/\/storage\/v1\/object\/(?:public\/)?paintings\/([^?]+)/);
@@ -378,9 +437,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const rewrittenPrompt = await rewriteComicPromptIfNeeded(body.prompt.trim(), LOVABLE_API_KEY);
-
     const mode = body.mode ?? "create";
+    const cleanedPrompt = await condensePromptIfNeeded(body.prompt.trim(), LOVABLE_API_KEY ?? null);
+    const rewrittenPrompt = mode === "comic"
+      ? await rewriteComicPromptIfNeeded(cleanedPrompt, LOVABLE_API_KEY ?? null)
+      : cleanedPrompt;
     const provider = mode === "remix" ? "lovable" : (body.provider ?? "lovable");
     const aspectRatio = body.aspect_ratio ?? (mode === "comic" ? "3:4" : "1:1");
     const affirmation = (body.affirmation ?? "").trim();
@@ -430,33 +491,82 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
       modelUsed = body.model ?? "google/gemini-3.1-flash-image-preview";
       const sourceDataUrl = await fetchAsDataUrl(body.source_image_url, admin);
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: modelUsed,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "text", text: `Transform this image into an original artwork. ${finalPrompt}` },
-              { type: "image_url", image_url: { url: sourceDataUrl } },
-            ],
-          }],
-          modalities: ["image", "text"],
-        }),
-      });
+      const callRemixModel = async (model: string, promptOverride?: string) => {
+        return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: `Transform this image into one polished original artwork. ${promptOverride ?? finalPrompt}` },
+                { type: "image_url", image_url: { url: sourceDataUrl } },
+              ],
+            }],
+            modalities: ["image", "text"],
+          }),
+        });
+      };
+
+      let aiResp = await callRemixModel(modelUsed);
       if (!aiResp.ok) {
         const t = await aiResp.text();
         if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Rate limited." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Out of AI credits." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         throw new Error(`AI gateway error ${aiResp.status}: ${t}`);
       }
-      const aiJson = await aiResp.json();
-      const dataUrl: string | undefined = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      let aiJson = await aiResp.json();
+      let dataUrl: string | undefined = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+      const remixFallbackChain = [
+        "google/gemini-3-pro-image-preview",
+        "google/gemini-3.1-flash-image-preview",
+        "google/gemini-2.5-flash-image",
+      ].filter((m) => m !== modelUsed);
+
+      for (const fallbackModel of remixFallbackChain) {
+        if (dataUrl) break;
+        const textOut = extractModelTextContent(aiJson?.choices?.[0]?.message?.content);
+        console.warn(`img-to-img: no image from ${modelUsed}, retrying with ${fallbackModel}. text=`, textOut);
+        const fallback = await callRemixModel(fallbackModel);
+        if (!fallback.ok) {
+          console.warn(`img-to-img: fallback ${fallbackModel} failed http`, fallback.status, await fallback.text());
+          continue;
+        }
+        aiJson = await fallback.json();
+        dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (dataUrl) modelUsed = fallbackModel;
+      }
+
       if (!dataUrl) {
-        const textOut = aiJson?.choices?.[0]?.message?.content ?? "";
-        console.error("img-to-img: no image returned. model=", modelUsed, "text=", textOut);
-        throw new Error(`No image returned from model. ${textOut ? "Model said: " + String(textOut).slice(0, 240) : "Try rephrasing the prompt — it may have been blocked."}`);
+        const simplifiedPrompt = `Restyle the source image into one clear, high-end finished artwork. Preserve the main subject, simplify the composition, remove any text or layout elements, and render it in ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Focus on one visually coherent scene with strong light, tactile paint texture, and no captions or extra graphic elements. Aspect ratio ${aspectRatio}.`;
+        for (const simplifiedModel of ["google/gemini-3.1-flash-image-preview", "google/gemini-2.5-flash-image"]) {
+          const retry = await callRemixModel(simplifiedModel, simplifiedPrompt);
+          if (!retry.ok) {
+            console.warn(`img-to-img: simplified retry ${simplifiedModel} failed http`, retry.status, await retry.text());
+            continue;
+          }
+          aiJson = await retry.json();
+          dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          if (dataUrl) {
+            modelUsed = simplifiedModel;
+            break;
+          }
+        }
+      }
+
+      if (!dataUrl) {
+        const rawTextOut = extractModelTextContent(aiJson?.choices?.[0]?.message?.content);
+        const textOut = sanitizeModelDeclineText(rawTextOut);
+        console.error("img-to-img: no image returned. model=", modelUsed, "text=", textOut || rawTextOut);
+        const hint = textOut
+          ? `Model declined: ${textOut.slice(0, 240)}`
+          : "No image returned from model. Try a shorter, more visual prompt without analysis or formatting.";
+        return new Response(JSON.stringify({ error: hint, code: "NO_IMAGE" }), {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       const m = dataUrl.match(/^data:(.+?);base64,(.+)$/);
       if (!m) throw new Error("Bad image payload");

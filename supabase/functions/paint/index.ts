@@ -58,7 +58,7 @@ const STYLE_PRESETS: Record<string, string> = {
   modern_statement:
     "Bold contemporary statement piece for a luxury living room, oversized scale energy, single striking subject, high-contrast palette of black + ivory + gold accents, layered mixed-media textures, refined gallery composition.",
   comic_marvel:
-    "Modern Marvel-realism comic illustration: photoreal anatomy, dramatic rim lighting, painted color rendering (Alex Ross / variant cover quality), subtle ink lines, cinematic composition, hyper-detailed costume textures, atmospheric background, dynamic action pose.",
+    "Modern cinematic comic illustration: photoreal anatomy, dramatic rim lighting, painted color rendering, subtle ink lines, cinematic composition, hyper-detailed costume textures, atmospheric background, dynamic action pose.",
   high_gloss:
     "Social-Culture-Art / Crib-of-Art-style HIGH-GLOSS ACRYLIC PRINT: ultra-saturated photoreal subject (legends, money, cars, sports icons, motivational typography or street-culture motifs) rendered as if printed on thick crystal-clear acrylic with a mirror-like resin finish. Bold isometric / 3D layered depth, crisp drop shadows, neon-on-dark color pops, glossy reflections catching gallery lighting, sharp typographic accents in chrome / gold / iced-out diamond, premium luxury wall-art presentation.",
 };
@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
         ? `\n\nPanel script (render each beat in its own panel, in reading order left→right, top→bottom):\n${body.comic_script}`
         : "";
       finalPrompt =
-`Create a high-end realistic comic page in Modern Marvel-Realism style: photoreal anatomy, dramatic cinematic lighting, painted color rendering (Alex Ross / variant cover quality), subtle ink lines, hyper-detailed costume textures, atmospheric backgrounds, dynamic action poses.
+`Create a high-end realistic comic page in a cinematic modern comic style: photoreal anatomy, dramatic cinematic lighting, painted color rendering, subtle ink lines, hyper-detailed costume textures, atmospheric backgrounds, dynamic action poses.
 
 ${layoutBlock}
 

@@ -1,0 +1,1 @@
+ALTER TABLE public.paintings ADD COLUMN IF NOT EXISTS description text;

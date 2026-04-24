@@ -188,6 +188,7 @@ export type Database = {
           auto_suggested: boolean
           category_id: string | null
           created_at: string
+          description: string | null
           etsy_listing_id: string | null
           external_id: string | null
           final_prompt: string | null
@@ -212,6 +213,7 @@ export type Database = {
           auto_suggested?: boolean
           category_id?: string | null
           created_at?: string
+          description?: string | null
           etsy_listing_id?: string | null
           external_id?: string | null
           final_prompt?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           auto_suggested?: boolean
           category_id?: string | null
           created_at?: string
+          description?: string | null
           etsy_listing_id?: string | null
           external_id?: string | null
           final_prompt?: string | null

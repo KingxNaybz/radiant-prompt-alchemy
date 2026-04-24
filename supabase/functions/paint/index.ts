@@ -203,6 +203,68 @@ async function rewriteComicPromptIfNeeded(prompt: string, apiKey: string | null)
   }
 }
 
+async function generateTitleAndDescription(
+  visualPrompt: string,
+  existingTitle: string | undefined,
+  apiKey: string | null,
+): Promise<{ title: string; description: string }> {
+  const fallbackTitle = (existingTitle ?? "").trim() || "Untitled";
+  const fallback = {
+    title: fallbackTitle,
+    description: visualPrompt.slice(0, 280),
+  };
+  if (!apiKey) return fallback;
+
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You write gallery copy for Velour Walls, a luxury fine-art studio. From the user's visual prompt, produce a poetic 2–5 word title and a single evocative paragraph (60–110 words) describing the artwork's mood, lighting, texture, and emotional pull. No emoji, no hashtags, no quotes around the title.",
+          },
+          { role: "user", content: visualPrompt },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "set_artwork_copy",
+              description: "Return the title and description for this artwork.",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "2-5 word evocative title, no quotes." },
+                  description: { type: "string", description: "60-110 word gallery description." },
+                },
+                required: ["title", "description"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "set_artwork_copy" } },
+      }),
+    });
+
+    if (!resp.ok) return fallback;
+    const json = await resp.json();
+    const args = json?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!args) return fallback;
+    const parsed = typeof args === "string" ? JSON.parse(args) : args;
+    const title = (existingTitle?.trim()) || sanitizeModelDeclineText(String(parsed.title ?? "")) || fallbackTitle;
+    const description = sanitizeModelDeclineText(String(parsed.description ?? "")) || fallback.description;
+    return { title, description };
+  } catch (err) {
+    console.warn("generateTitleAndDescription failed:", err);
+    return fallback;
+  }
+}
+
 function bytesToDataUrl(buf: Uint8Array, ct: string): string {
   let bin = "";
   for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
@@ -689,9 +751,16 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
     if (body.style_preset) tags.push(`preset:${body.style_preset}`);
     if (mode === "comic") tags.push("comic", `layout:${body.comic_layout ?? "2x2"}`);
 
+    const { title: generatedTitle, description: generatedDescription } = await generateTitleAndDescription(
+      rewrittenPrompt,
+      body.title,
+      LOVABLE_API_KEY ?? null,
+    );
+
     const { data: painting, error: insErr } = await admin.from("paintings").insert({
       owner_id: userId,
-      title: body.title?.trim() || (mode === "comic" ? "Untitled Comic" : "Untitled"),
+      title: body.title?.trim() || generatedTitle || (mode === "comic" ? "Untitled Comic" : "Untitled"),
+      description: generatedDescription,
       prompt: body.prompt,
       style: body.style ?? (body.style_preset ?? null),
       aspect_ratio: aspectRatio,

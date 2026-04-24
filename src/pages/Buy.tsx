@@ -64,18 +64,19 @@ export default function Buy() {
       const { error } = await supabase.functions.invoke("submit-wire-order", {
         body: {
           paintingId: selected.id,
-          paintingTitle: selected.title,
+          paintingTitle: signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title,
           finish,
           size,
           amountCents: currentPriceCents,
           customerName: name,
           customerEmail: email,
           shippingAddress: address,
+          notes: signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
         },
       });
       if (error) throw error;
       toast.success("Order received. The studio will email an invoice within 24 hours.");
-      setName(""); setEmail(""); setAddress(""); setSelected(null);
+      setName(""); setEmail(""); setAddress(""); setSelected(null); setSigned(false);
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Something went wrong.");

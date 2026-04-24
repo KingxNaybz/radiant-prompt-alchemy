@@ -76,6 +76,10 @@ const COMIC_LAYOUTS: Record<string, string> = {
     "A classic 6-panel comic page (3 rows × 2 columns), uniform panels, clean white gutters ~12px, thin black borders.",
 };
 
+const HOUSE_STYLE = "Velour Walls house style: engineer absolute matte shadows with deep charcoals and pitch blacks, then carve blinding luminous highlights through aggressive chiaroscuro. Build visible impasto ridges, palette-knife structure, scraped paint, and tactile surface drama that catches real room light. Portraits must feel psychologically alive with hyper-real micro-expression detail; abstracts must balance brutal blocks of color with raw looping linework and emotionally charged brush velocity. The final artwork should feel like an architectural window into an emotional state, not a flat picture.";
+
+const COMIC_IP_PATTERN = /\b(wolverine|marvel|x-men|avengers|deadpool|spider[- ]?man|venom|batman|joker|superman|iron man|captain america|hulk)\b/i;
+
 function jsonResponse(payload: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -109,6 +113,35 @@ function sanitizeModelDeclineText(text: string): string {
     .trim();
 
   return cleaned;
+}
+
+async function rewriteComicPromptIfNeeded(prompt: string, apiKey: string | null): Promise<string> {
+  if (!apiKey || !COMIC_IP_PATTERN.test(prompt)) return prompt;
+
+  try {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Rewrite the user's comic-art prompt into a legally-safe original-character prompt. Preserve tone, mood, setting, color, motion, and emotional energy, but remove all trademarked characters, franchise names, and exact likeness references. Return only the rewritten visual prompt.",
+          },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    if (!resp.ok) return prompt;
+    const json = await resp.json();
+    const rewritten = sanitizeModelDeclineText(extractModelTextContent(json?.choices?.[0]?.message?.content));
+    return rewritten || prompt;
+  } catch {
+    return prompt;
+  }
 }
 
 function bytesToDataUrl(buf: Uint8Array, ct: string): string {
@@ -345,6 +378,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    const rewrittenPrompt = await rewriteComicPromptIfNeeded(body.prompt.trim(), LOVABLE_API_KEY);
+
     const mode = body.mode ?? "create";
     const provider = mode === "remix" ? "lovable" : (body.provider ?? "lovable");
     const aspectRatio = body.aspect_ratio ?? (mode === "comic" ? "3:4" : "1:1");
@@ -368,15 +403,15 @@ Deno.serve(async (req) => {
         ? `\n\nPanel script (render each beat in its own panel, in reading order left→right, top→bottom):\n${body.comic_script}`
         : "";
       finalPrompt =
-`Create a high-end realistic comic page in a cinematic modern comic style: photoreal anatomy, dramatic cinematic lighting, painted color rendering, subtle ink lines, hyper-detailed costume textures, atmospheric backgrounds, dynamic action poses.
+`Create a high-end realistic comic page in a cinematic modern comic style. ${HOUSE_STYLE} Use original characters only, never branded heroes or franchise-specific likenesses. Keep anatomy powerful, lighting dramatic, silhouettes legible, and page composition easy for the image model to render.
 
 ${layoutBlock}
 
-Story / scene: ${body.prompt}${scriptBlock}${affirmationBlock}${presetBlock}${finishBlock}
+Story / scene: ${rewrittenPrompt}${scriptBlock}${affirmationBlock}${presetBlock}${finishBlock}
 
-Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be CRISP, correctly spelled, professionally kerned, in classic comic lettering. If no dialogue is given, render the page silent (no text). Aspect ratio ${aspectRatio}, 8K, gallery-print quality, cohesive color palette across all panels.`;
+Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be minimal, crisp, and sparse. If no dialogue is given, render the page silent (no text). Favor clear panel storytelling over excessive detail. Aspect ratio ${aspectRatio}, cohesive color palette across all panels.`;
     } else {
-      finalPrompt = `${body.prompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+      finalPrompt = `${rewrittenPrompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
     }
 
     let categoryId: string | null = body.category_id ?? null;
@@ -489,7 +524,7 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       }
 
       if (!dataUrl && mode === "comic") {
-        const simplifiedPrompt = `Create one polished comic-book illustration page for this scene: ${body.prompt}. Keep it visually clean and easy to render, with dynamic pose, cinematic lighting, painted comic style, and no text unless explicitly required. Aspect ratio ${aspectRatio}.`;
+        const simplifiedPrompt = `Create one polished original-character comic illustration for this scene: ${rewrittenPrompt}. ${HOUSE_STYLE} Keep it visually clean and easy to render, with dynamic pose, strong silhouette, cinematic lighting, painted comic style, and no text unless explicitly required. Aspect ratio ${aspectRatio}.`;
         for (const simplifiedModel of ["google/gemini-3.1-flash-image-preview", "google/gemini-2.5-flash-image"]) {
           const retry = await callModel(simplifiedModel, simplifiedPrompt);
           if (!retry.ok) {
@@ -511,7 +546,9 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
         console.error("paint: no image returned. model=", modelUsed, "text=", textOut || rawTextOut);
         const hint = textOut
           ? `Model declined: ${textOut.slice(0, 240)}`
-          : "The model returned no image. Try rephrasing the prompt — it may have been blocked by safety filters.";
+          : mode === "comic"
+            ? "The comic prompt still did not return an image. Try an original character or scene description instead of a named franchise character."
+            : "The model returned no image. Try rephrasing the prompt — it may have been blocked by safety filters.";
         return new Response(JSON.stringify({ error: hint, code: "NO_IMAGE" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const m = dataUrl.match(/^data:(.+?);base64,(.+)$/);

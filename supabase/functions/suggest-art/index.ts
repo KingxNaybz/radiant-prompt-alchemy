@@ -25,6 +25,8 @@ const PRESET_DIRECTIONS: Record<string, string> = {
   high_gloss: "Social Culture Art best-seller energy: high-gloss acrylic / resin wall print look, mirror-like surface, ultra-saturated color, painterly impasto under glass.",
 };
 
+const HOUSE_STYLE = "Velour Walls house style: engineer absolute matte shadows with deep charcoals and pitch blacks, then carve blinding luminous highlights through aggressive chiaroscuro. Build visible impasto ridges, palette-knife structure, scraped paint, and tactile surface drama that catches real room light. Portraits must feel psychologically alive with hyper-real micro-expression detail; abstracts must balance brutal blocks of color with raw looping linework and emotionally charged brush velocity. Every piece should feel like an architectural window into an emotional state.";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -77,7 +79,8 @@ Deno.serve(async (req) => {
     // Ask Lovable AI to brainstorm prompts
     const sysPrompt = `You are Naybz's creative director for Velour Walls, a luxury fine-art atelier.
 Suggest ${count} brand-new museum-grade painting concepts. Each must be unique, evocative, and gallery-worthy.
-Pick a category from this list: ${catList.map((c) => c.slug).join(", ")}.${presetDirection}${userDescription}
+    Every concept must honor this default house style: ${HOUSE_STYLE}
+    Pick a category from this list: ${catList.map((c) => c.slug).join(", ")}.${presetDirection}${userDescription}
 Return ONLY a JSON array, no prose. Schema:
 [{"title": "...", "prompt": "...", "style": "...", "category_slug": "...", "aspect_ratio": "1:1|3:4|4:3|16:9"}]`;
 
@@ -114,7 +117,7 @@ Return ONLY a JSON array, no prose. Schema:
     for (const idea of ideas.slice(0, count)) {
       try {
         const ar = idea.aspect_ratio ?? "1:1";
-        const finalPrompt = `${idea.prompt}\n\nStyle: ${idea.style ?? "signature Velour Walls aesthetic"}. Hyper-realistic, 8K, ultra detailed, museum-grade fine art, dramatic lighting, painterly textures, aspect ratio ${ar}.`;
+        const finalPrompt = `${idea.prompt}\n\nStyle: ${idea.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, dramatic lighting, painterly textures, aspect ratio ${ar}.`;
         const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },

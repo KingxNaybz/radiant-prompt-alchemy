@@ -68,7 +68,7 @@ async function sendOrderEmails(orderId: string) {
         notes: order.notes,
       },
     },
-  }).catch((e) => console.error("studio email failed", e));
+  }).catch((e: unknown) => console.error("studio email failed", e));
 }
 
 async function updateOrderByIntent(intent: any, status: string, sendEmails = false) {

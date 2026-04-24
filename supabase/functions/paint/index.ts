@@ -439,15 +439,23 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       let aiJson = await aiResp.json();
       let dataUrl: string | undefined = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-      // Fallback: if pro/preview model returned no image, retry with flash.
-      if (!dataUrl && modelUsed !== "google/gemini-3.1-flash-image-preview") {
-        console.warn(`paint: no image from ${modelUsed}, retrying with flash. text=`, aiJson?.choices?.[0]?.message?.content);
-        const fallback = await callModel("google/gemini-3.1-flash-image-preview");
-        if (fallback.ok) {
-          aiJson = await fallback.json();
-          dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-          if (dataUrl) modelUsed = "google/gemini-3.1-flash-image-preview";
+      // Fallback chain: try the stable Nano Banana models if the requested one returned no image.
+      const fallbackChain = [
+        "google/gemini-3.1-flash-image-preview",
+        "google/gemini-2.5-flash-image",
+      ].filter((m) => m !== modelUsed);
+
+      for (const fallbackModel of fallbackChain) {
+        if (dataUrl) break;
+        console.warn(`paint: no image from ${modelUsed}, retrying with ${fallbackModel}. text=`, aiJson?.choices?.[0]?.message?.content);
+        const fallback = await callModel(fallbackModel);
+        if (!fallback.ok) {
+          console.warn(`paint: fallback ${fallbackModel} failed http`, fallback.status, await fallback.text());
+          continue;
         }
+        aiJson = await fallback.json();
+        dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (dataUrl) modelUsed = fallbackModel;
       }
 
       if (!dataUrl) {

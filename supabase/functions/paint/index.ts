@@ -524,7 +524,7 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       }
 
       if (!dataUrl && mode === "comic") {
-        const simplifiedPrompt = `Create one polished comic-book illustration page for this scene: ${body.prompt}. Keep it visually clean and easy to render, with dynamic pose, cinematic lighting, painted comic style, and no text unless explicitly required. Aspect ratio ${aspectRatio}.`;
+        const simplifiedPrompt = `Create one polished original-character comic illustration for this scene: ${rewrittenPrompt}. ${HOUSE_STYLE} Keep it visually clean and easy to render, with dynamic pose, strong silhouette, cinematic lighting, painted comic style, and no text unless explicitly required. Aspect ratio ${aspectRatio}.`;
         for (const simplifiedModel of ["google/gemini-3.1-flash-image-preview", "google/gemini-2.5-flash-image"]) {
           const retry = await callModel(simplifiedModel, simplifiedPrompt);
           if (!retry.ok) {
@@ -546,7 +546,9 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
         console.error("paint: no image returned. model=", modelUsed, "text=", textOut || rawTextOut);
         const hint = textOut
           ? `Model declined: ${textOut.slice(0, 240)}`
-          : "The model returned no image. Try rephrasing the prompt — it may have been blocked by safety filters.";
+          : mode === "comic"
+            ? "The comic prompt still did not return an image. Try an original character or scene description instead of a named franchise character."
+            : "The model returned no image. Try rephrasing the prompt — it may have been blocked by safety filters.";
         return new Response(JSON.stringify({ error: hint, code: "NO_IMAGE" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const m = dataUrl.match(/^data:(.+?);base64,(.+)$/);

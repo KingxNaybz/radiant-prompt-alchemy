@@ -751,9 +751,16 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
     if (body.style_preset) tags.push(`preset:${body.style_preset}`);
     if (mode === "comic") tags.push("comic", `layout:${body.comic_layout ?? "2x2"}`);
 
+    const { title: generatedTitle, description: generatedDescription } = await generateTitleAndDescription(
+      rewrittenPrompt,
+      body.title,
+      LOVABLE_API_KEY ?? null,
+    );
+
     const { data: painting, error: insErr } = await admin.from("paintings").insert({
       owner_id: userId,
-      title: body.title?.trim() || (mode === "comic" ? "Untitled Comic" : "Untitled"),
+      title: body.title?.trim() || generatedTitle || (mode === "comic" ? "Untitled Comic" : "Untitled"),
+      description: generatedDescription,
       prompt: body.prompt,
       style: body.style ?? (body.style_preset ?? null),
       aspect_ratio: aspectRatio,

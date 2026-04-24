@@ -1205,6 +1205,7 @@ function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
         body: {
           prompt: prompt.trim(),
           category_slug: categorySlug,
+          mode: "comic",
           style_preset: "comic_marvel",
         },
       });

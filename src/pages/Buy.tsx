@@ -235,15 +235,33 @@ export default function Buy() {
 
         {selected && (
           <div className="flex gap-4 items-center border border-border p-4 mb-6 bg-card">
-            <img src={selected.image_url} alt={selected.title} className="w-20 h-20 object-cover" />
+            {signed ? (
+              <SignedImage
+                src={selected.image_url}
+                alt={selected.title}
+                wrapperClassName="w-20 h-20 shrink-0"
+                className="w-20 h-20 object-cover"
+                signatureClassName="bottom-1 right-1 text-[6px]"
+              />
+            ) : (
+              <img src={selected.image_url} alt={selected.title} className="w-20 h-20 object-cover" />
+            )}
             <div className="flex-1">
               <div className="font-serif text-lg">{selected.title}</div>
               <div className="eyebrow text-muted-foreground text-[0.65rem] mt-1">
                 {finish} · {size}
+                {signed && <span className="text-gold-deep"> · Hand-signed</span>}
               </div>
             </div>
-            <div className="font-serif text-2xl text-gold-deep">
-              {formatPrice(currentPriceCents)}
+            <div className="text-right">
+              <div className="font-serif text-2xl text-gold-deep">
+                {formatPrice(currentPriceCents)}
+              </div>
+              {signed && (
+                <div className="text-[0.65rem] text-muted-foreground mt-0.5">
+                  incl. +{formatPrice(SIGNATURE_SURCHARGE_CENTS)} signature
+                </div>
+              )}
             </div>
           </div>
         )}

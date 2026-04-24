@@ -233,7 +233,10 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
   return (
     <div className="grid lg:grid-cols-12 gap-8">
       <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
-        <div className="eyebrow text-muted-foreground">New original</div>
+          <div className="eyebrow text-muted-foreground">New original</div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Standard direction: absolute matte blacks, blinding chiaroscuro highlights, sculpted impasto texture, and emotionally charged form.
+          </p>
         <div className="border border-border bg-secondary/30 p-3 space-y-2">
           <div className="eyebrow text-[0.65rem] text-gold-deep">Crib-style presets (one click)</div>
           <div className="grid grid-cols-2 gap-1.5">
@@ -1227,9 +1230,9 @@ function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
     <div className="space-y-6">
       <div className="border border-border bg-card p-6 space-y-4">
         <div>
-          <div className="eyebrow text-muted-foreground mb-1">Comic mode · Cinematic modern comic realism</div>
+          <div className="eyebrow text-muted-foreground mb-1">Comic mode · Cinematic original-character realism</div>
           <p className="text-sm text-muted-foreground">
-            Photoreal anatomy, painted color, cinematic rim lighting, dynamic poses. Output lands in Pending for approval.
+            Original characters, painted comic realism, dramatic chiaroscuro, and cleaner page layouts for more reliable generation. Output lands in Pending for approval.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-4">

@@ -5,8 +5,8 @@ import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
 
 const STUDIO_INBOX = "studio@velourwalls.art";
 
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
+let _supabase: any = null;
+function getSupabase(): any {
   if (!_supabase) {
     _supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -52,7 +52,7 @@ async function sendOrderEmails(orderId: string) {
       idempotencyKey: `order-received-${order.id}`,
       templateData: sharedFields,
     },
-  }).catch((e) => console.error("customer email failed", e));
+  }).catch((e: unknown) => console.error("customer email failed", e));
 
   // Studio "new order" alert
   await supabase.functions.invoke("send-transactional-email", {
@@ -68,7 +68,7 @@ async function sendOrderEmails(orderId: string) {
         notes: order.notes,
       },
     },
-  }).catch((e) => console.error("studio email failed", e));
+  }).catch((e: unknown) => console.error("studio email failed", e));
 }
 
 async function updateOrderByIntent(intent: any, status: string, sendEmails = false) {

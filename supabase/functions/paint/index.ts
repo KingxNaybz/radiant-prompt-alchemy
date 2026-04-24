@@ -444,13 +444,13 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       modelUsed = body.model ?? defaultModel;
 
       // Try requested model, then fall back to flash if no image came back (model refusal / text-only response).
-      const callModel = async (model: string) => {
+      const callModel = async (model: string, promptOverride?: string) => {
         const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model,
-            messages: [{ role: "user", content: finalPrompt }],
+            messages: [{ role: "user", content: promptOverride ?? finalPrompt }],
             modalities: ["image", "text"],
           }),
         });
@@ -486,6 +486,23 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
         aiJson = await fallback.json();
         dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         if (dataUrl) modelUsed = fallbackModel;
+      }
+
+      if (!dataUrl && mode === "comic") {
+        const simplifiedPrompt = `Create one polished comic-book illustration page for this scene: ${body.prompt}. Keep it visually clean and easy to render, with dynamic pose, cinematic lighting, painted comic style, and no text unless explicitly required. Aspect ratio ${aspectRatio}.`;
+        for (const simplifiedModel of ["google/gemini-3.1-flash-image-preview", "google/gemini-2.5-flash-image"]) {
+          const retry = await callModel(simplifiedModel, simplifiedPrompt);
+          if (!retry.ok) {
+            console.warn(`paint: simplified comic retry ${simplifiedModel} failed http`, retry.status, await retry.text());
+            continue;
+          }
+          aiJson = await retry.json();
+          dataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          if (dataUrl) {
+            modelUsed = simplifiedModel;
+            break;
+          }
+        }
       }
 
       if (!dataUrl) {

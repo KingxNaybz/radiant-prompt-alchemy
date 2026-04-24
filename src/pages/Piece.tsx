@@ -43,7 +43,10 @@ export default function Piece() {
       <SiteHeader />
       <article className="max-w-[1400px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-12 gap-12">
         <div className="md:col-span-8">
-          <SignedImage src={p.image_url} alt={p.title} className="w-full shadow-press" signatureClassName="bottom-3 right-4 text-sm" />
+          <img src={p.image_url} alt={p.title} className="w-full shadow-press" />
+          <p className="eyebrow text-muted-foreground text-[0.65rem] mt-3">
+            Available <span className="text-gold-deep">hand-signed by Naybz</span> at checkout — collector's option.
+          </p>
         </div>
         <aside className="md:col-span-4 md:sticky md:top-28 self-start">
           <div className="eyebrow text-muted-foreground mb-3">Original Work</div>

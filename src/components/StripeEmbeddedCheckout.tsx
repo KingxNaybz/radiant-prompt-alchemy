@@ -11,6 +11,7 @@ export interface StripeEmbeddedCheckoutProps {
   customerName: string;
   customerEmail: string;
   shippingAddress: string;
+  notes?: string;
   returnUrl: string;
 }
 

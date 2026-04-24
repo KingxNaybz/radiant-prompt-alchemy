@@ -1227,7 +1227,7 @@ function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
     <div className="space-y-6">
       <div className="border border-border bg-card p-6 space-y-4">
         <div>
-          <div className="eyebrow text-muted-foreground mb-1">Comic mode · Modern Marvel realism</div>
+          <div className="eyebrow text-muted-foreground mb-1">Comic mode · Cinematic modern comic realism</div>
           <p className="text-sm text-muted-foreground">
             Photoreal anatomy, painted color, cinematic rim lighting, dynamic poses. Output lands in Pending for approval.
           </p>

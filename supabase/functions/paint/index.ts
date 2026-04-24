@@ -83,6 +83,34 @@ function jsonResponse(payload: Record<string, unknown>, status = 200) {
   });
 }
 
+function extractModelTextContent(content: unknown): string {
+  if (typeof content === "string") return content.trim();
+  if (Array.isArray(content)) {
+    return content
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object" && "text" in item && typeof item.text === "string") {
+          return item.text;
+        }
+        return "";
+      })
+      .join("\n")
+      .trim();
+  }
+  return "";
+}
+
+function sanitizeModelDeclineText(text: string): string {
+  const cleaned = text
+    .replace(/```+/g, " ")
+    .replace(/'''+/g, " ")
+    .replace(/^[`'"\s]+|[`'"\s]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return cleaned;
+}
+
 function bytesToDataUrl(buf: Uint8Array, ct: string): string {
   let bin = "";
   for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
@@ -441,13 +469,15 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
 
       // Fallback chain: try the stable Nano Banana models if the requested one returned no image.
       const fallbackChain = [
+        "google/gemini-3-pro-image-preview",
         "google/gemini-3.1-flash-image-preview",
         "google/gemini-2.5-flash-image",
       ].filter((m) => m !== modelUsed);
 
       for (const fallbackModel of fallbackChain) {
         if (dataUrl) break;
-        console.warn(`paint: no image from ${modelUsed}, retrying with ${fallbackModel}. text=`, aiJson?.choices?.[0]?.message?.content);
+        const textOut = extractModelTextContent(aiJson?.choices?.[0]?.message?.content);
+        console.warn(`paint: no image from ${modelUsed}, retrying with ${fallbackModel}. text=`, textOut);
         const fallback = await callModel(fallbackModel);
         if (!fallback.ok) {
           console.warn(`paint: fallback ${fallbackModel} failed http`, fallback.status, await fallback.text());
@@ -459,10 +489,11 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       }
 
       if (!dataUrl) {
-        const textOut = aiJson?.choices?.[0]?.message?.content ?? "";
-        console.error("paint: no image returned. model=", modelUsed, "text=", textOut);
+        const rawTextOut = extractModelTextContent(aiJson?.choices?.[0]?.message?.content);
+        const textOut = sanitizeModelDeclineText(rawTextOut);
+        console.error("paint: no image returned. model=", modelUsed, "text=", textOut || rawTextOut);
         const hint = textOut
-          ? `Model declined: ${String(textOut).slice(0, 240)}`
+          ? `Model declined: ${textOut.slice(0, 240)}`
           : "The model returned no image. Try rephrasing the prompt — it may have been blocked by safety filters.";
         return new Response(JSON.stringify({ error: hint, code: "NO_IMAGE" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }

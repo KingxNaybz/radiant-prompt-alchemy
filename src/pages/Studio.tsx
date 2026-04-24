@@ -55,7 +55,7 @@ const COMIC_LAYOUTS = [
 
 interface Category { id: string; slug: string; name: string; sort_order: number; }
 interface Painting {
-  id: string; title: string; prompt: string; style: string | null;
+  id: string; title: string; description: string | null; prompt: string; style: string | null;
   aspect_ratio: string; image_url: string; is_published: boolean;
   price_cents: number | null; provider: string | null; model: string | null;
   external_id: string | null; created_at: string;
@@ -625,6 +625,53 @@ function TitleEditor({ painting, onSaved }: { painting: Painting; onSaved: () =>
       <button onClick={() => { setValue(painting.title); setEditing(false); }} className="eyebrow text-[0.6rem] px-2 text-muted-foreground hover:text-ink">
         ✕
       </button>
+    </div>
+  );
+}
+
+/* ---------------- DESCRIPTION EDITOR ---------------- */
+function DescriptionEditor({ painting, onSaved }: { painting: Painting; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(painting.description ?? "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setValue(painting.description ?? ""); }, [painting.description]);
+
+  const save = async () => {
+    const next = value.trim();
+    if (next === (painting.description ?? "").trim()) { setEditing(false); return; }
+    setSaving(true);
+    const { error } = await supabase.from("paintings").update({ description: next || null }).eq("id", painting.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Description updated.");
+    setEditing(false);
+    onSaved();
+  };
+
+  if (!editing) {
+    return (
+      <button onClick={() => setEditing(true)}
+        className="block w-full text-left text-xs text-muted-foreground line-clamp-3 hover:text-ink transition-colors"
+        title="Click to edit description">
+        {painting.description?.trim() || <span className="italic">No description yet — click to write one.</span>}
+        <span className="text-[0.6rem] align-middle ml-1">✎</span>
+      </button>
+    );
+  }
+  return (
+    <div className="space-y-1">
+      <textarea autoFocus value={value} onChange={(e) => setValue(e.target.value)}
+        rows={4}
+        className="w-full bg-transparent border border-ink p-2 text-xs focus:outline-none resize-y" />
+      <div className="flex gap-1 justify-end">
+        <button onClick={save} disabled={saving} className="eyebrow text-[0.6rem] px-2 py-1 border border-ink hover:bg-ink hover:text-paper">
+          {saving ? "…" : "Save"}
+        </button>
+        <button onClick={() => { setValue(painting.description ?? ""); setEditing(false); }} className="eyebrow text-[0.6rem] px-2 py-1 text-muted-foreground hover:text-ink">
+          ✕
+        </button>
+      </div>
     </div>
   );
 }

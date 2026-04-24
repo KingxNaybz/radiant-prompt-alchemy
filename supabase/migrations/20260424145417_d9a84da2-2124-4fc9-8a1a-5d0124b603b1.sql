@@ -1,0 +1,1 @@
+UPDATE public.paintings SET image_url = 'https://xispoxjjjaevbxstrepr.supabase.co/storage/v1/object/public/paintings/bf4e6766-29b6-494e-b833-d2a4018620b6/a9d9a650-191f-439d-ac82-88915ed01496-noreflection.png', updated_at = now() WHERE id = '9139151e-88a4-4091-b603-7ac32f2f04cc';

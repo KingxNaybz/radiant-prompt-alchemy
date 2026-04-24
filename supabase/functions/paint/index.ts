@@ -356,7 +356,7 @@ async function resolvePageImageAsDataUrl(pageUrl: string): Promise<string> {
 
 async function fetchAsDataUrl(
   url: string,
-  admin: ReturnType<typeof createClient>,
+  admin: any,
 ): Promise<string> {
   if (url.startsWith("data:")) return url;
   const m = url.match(/\/storage\/v1\/object\/(?:public\/)?paintings\/([^?]+)/);
@@ -438,9 +438,9 @@ Deno.serve(async (req) => {
     }
 
     const mode = body.mode ?? "create";
-    const cleanedPrompt = await condensePromptIfNeeded(body.prompt.trim(), LOVABLE_API_KEY);
+    const cleanedPrompt = await condensePromptIfNeeded(body.prompt.trim(), LOVABLE_API_KEY ?? null);
     const rewrittenPrompt = mode === "comic"
-      ? await rewriteComicPromptIfNeeded(cleanedPrompt, LOVABLE_API_KEY)
+      ? await rewriteComicPromptIfNeeded(cleanedPrompt, LOVABLE_API_KEY ?? null)
       : cleanedPrompt;
     const provider = mode === "remix" ? "lovable" : (body.provider ?? "lovable");
     const aspectRatio = body.aspect_ratio ?? (mode === "comic" ? "3:4" : "1:1");

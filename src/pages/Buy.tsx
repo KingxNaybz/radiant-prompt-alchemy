@@ -326,7 +326,43 @@ export default function Buy() {
             </div>
           </div>
 
-          <button
+          {/* SIGNATURE ADD-ON — exclusive, opt-in mark of authenticity */}
+          <div className="pt-2">
+            <div className="eyebrow text-muted-foreground mb-3 text-xs">Artist's mark · optional</div>
+            <button
+              type="button"
+              onClick={() => setSigned((s) => !s)}
+              aria-pressed={signed}
+              className={`w-full text-left p-5 border-2 transition-all flex items-start gap-4 ${
+                signed
+                  ? "border-gold-deep bg-card shadow-frame"
+                  : "border-border hover:border-ink"
+              }`}
+            >
+              <div
+                className={`mt-1 h-5 w-5 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  signed ? "border-gold-deep bg-gold-deep" : "border-border"
+                }`}
+              >
+                {signed && <span className="block h-2 w-2 rounded-full bg-paper" />}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-serif text-lg">
+                    Hand-signed by <span className="italic">Naybz</span>
+                  </div>
+                  <span className="eyebrow text-gold-deep text-[0.6rem] whitespace-nowrap">
+                    +{formatPrice(SIGNATURE_SURCHARGE_CENTS)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  Reserved for collectors. The artist's mark is added by hand on the
+                  lower-right of the finished piece — a quiet seal of authenticity that
+                  most prints will never carry. Off by default.
+                </p>
+              </div>
+            </button>
+          </div>
             disabled={!selected || submitting}
             className="w-full bg-ink text-paper eyebrow py-4 hover:bg-gold-deep transition-colors disabled:opacity-50"
           >

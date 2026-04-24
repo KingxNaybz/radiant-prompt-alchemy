@@ -50,6 +50,10 @@ export const FINISHES: Finish[] = [
   },
 ];
 
+// Optional add-on: hand-signed by Naybz. Kept rare on purpose — the signature
+// is the artist's mark of authenticity and only ships when explicitly chosen.
+export const SIGNATURE_SURCHARGE_CENTS = 4500;
+
 export const formatPrice = (cents: number) =>
   `$${Math.round(cents / 100).toLocaleString()}`;
 

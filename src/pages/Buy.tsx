@@ -38,8 +38,35 @@ export default function Buy() {
   const currentPriceCents = basePriceCents + (signed ? SIGNATURE_SURCHARGE_CENTS : 0);
 
   const jumpToSection = (section: HTMLElement | null) => {
+    if (!section) return;
+
     window.requestAnimationFrame(() => {
-      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const targetTop = section.getBoundingClientRect().top + window.scrollY - 96;
+
+      if (prefersReducedMotion) {
+        window.scrollTo({ top: targetTop });
+        return;
+      }
+
+      const startTop = window.scrollY;
+      const distance = targetTop - startTop;
+      const duration = 1000;
+      const startTime = performance.now();
+      const easeInOutCubic = (progress: number) =>
+        progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      const glide = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        window.scrollTo({ top: startTop + distance * easeInOutCubic(progress) });
+
+        if (progress < 1) {
+          window.requestAnimationFrame(glide);
+        }
+      };
+
+      window.requestAnimationFrame(glide);
     });
   };
 

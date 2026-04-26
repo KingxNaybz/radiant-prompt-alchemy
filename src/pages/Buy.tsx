@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
@@ -19,6 +19,8 @@ interface Painting {
 }
 
 export default function Buy() {
+  const finishesRef = useRef<HTMLElement | null>(null);
+  const orderRef = useRef<HTMLElement | null>(null);
   const [paintings, setPaintings] = useState<Painting[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Painting | null>(null);
@@ -34,6 +36,12 @@ export default function Buy() {
 
   const basePriceCents = priceFor(finish, size);
   const currentPriceCents = basePriceCents + (signed ? SIGNATURE_SURCHARGE_CENTS : 0);
+
+  const jumpToSection = (section: HTMLElement | null) => {
+    window.requestAnimationFrame(() => {
+      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   useEffect(() => {
     document.title = "Buy Now — Velour Walls";
@@ -122,7 +130,10 @@ export default function Buy() {
               return (
                 <button
                   key={p.id}
-                  onClick={() => setSelected(p)}
+                  onClick={() => {
+                    setSelected(p);
+                    jumpToSection(finishesRef.current);
+                  }}
                   className={`text-left group overflow-hidden border-2 transition-all ${
                     active ? "border-gold-deep shadow-press" : "border-transparent hover:border-ink"
                   }`}
@@ -154,7 +165,7 @@ export default function Buy() {
       </section>
 
       {/* FINISHES */}
-      <section className="bg-secondary/40 py-16">
+      <section ref={finishesRef} className="bg-secondary/40 py-16 scroll-mt-24">
         <div className="max-w-[1400px] mx-auto px-6 md:px-10">
           <div className="eyebrow text-muted-foreground mb-4">02 · Choose your finish</div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -212,7 +223,10 @@ export default function Buy() {
                 return (
                   <button
                     key={s.label}
-                    onClick={() => setSize(s.label)}
+                    onClick={() => {
+                      setSize(s.label);
+                      jumpToSection(orderRef.current);
+                    }}
                     className={`px-4 py-2 border eyebrow text-xs transition-colors ${
                       isActive
                         ? "bg-ink text-paper border-ink"
@@ -229,7 +243,7 @@ export default function Buy() {
       </section>
 
       {/* ORDER FORM */}
-      <section className="max-w-3xl mx-auto px-6 md:px-10 py-20">
+      <section ref={orderRef} className="max-w-3xl mx-auto px-6 md:px-10 py-20 scroll-mt-24">
         <div className="eyebrow text-muted-foreground mb-4">04 · Place your order</div>
         <h2 className="font-serif text-3xl mb-6">Ship it to me.</h2>
 

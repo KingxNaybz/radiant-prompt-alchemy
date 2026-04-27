@@ -311,49 +311,56 @@ export default function Buy() {
             placeholder="Email"
             className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
           />
-          <textarea
+          <input
             required
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            value={addressLine1}
+            onChange={(e) => setAddressLine1(e.target.value)}
+            placeholder="Street address"
+            className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+          />
+          <input
+            value={addressLine2}
+            onChange={(e) => setAddressLine2(e.target.value)}
+            placeholder="Apartment, suite, unit, etc."
+            className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+          />
+          <div className="grid md:grid-cols-3 gap-4">
+            <input
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="City"
+              className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+            />
+            <input
+              required
+              value={stateRegion}
+              onChange={(e) => setStateRegion(e.target.value)}
+              placeholder="State"
+              className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+            />
+            <input
+              required
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              placeholder="ZIP code"
+              className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+            />
+          </div>
+          <input
+            required
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="Country"
+            className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+          />
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
             rows={4}
-            placeholder="Shipping address"
+            placeholder="Question or special instructions"
             className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink resize-none"
           />
-
-          {/* PAYMENT METHOD */}
-          <div className="pt-2">
-            <div className="eyebrow text-muted-foreground mb-3 text-xs">Payment method</div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("card")}
-                className={`text-left p-4 border-2 transition-all ${
-                  paymentMethod === "card"
-                    ? "border-gold-deep bg-card shadow-frame"
-                    : "border-border hover:border-ink"
-                }`}
-              >
-                <div className="font-serif text-lg">Pay with card</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Card authorized now. Charged only after the studio approves your order.
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("wire")}
-                className={`text-left p-4 border-2 transition-all ${
-                  paymentMethod === "wire"
-                    ? "border-gold-deep bg-card shadow-frame"
-                    : "border-border hover:border-ink"
-                }`}
-              >
-                <div className="font-serif text-lg">Wire / bank transfer</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  We'll review and email an invoice with wire details within 24 hours.
-                </div>
-              </button>
-            </div>
-          </div>
 
           {/* SIGNATURE ADD-ON — exclusive, opt-in mark of authenticity */}
           <div className="pt-2">

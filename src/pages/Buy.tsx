@@ -408,19 +408,15 @@ export default function Buy() {
               ? "Choose a piece first"
               : submitting
                 ? "Processing…"
-                : paymentMethod === "card"
-                  ? `Continue to secure checkout · ${formatPrice(currentPriceCents)}`
-                  : `Request invoice · ${formatPrice(currentPriceCents)}`}
+                : `Continue to secure checkout · ${formatPrice(currentPriceCents)}`}
           </button>
           <p className="text-xs text-muted-foreground text-center">
-            {paymentMethod === "card"
-              ? "Secure card authorization via Stripe. The studio reviews and matches the best print partner before your card is charged."
-              : "No payment is taken now. The studio sends wire instructions after reviewing your order."}
+            Secure card authorization via Stripe. The studio reviews and matches the best print partner before your card is charged.
           </p>
         </form>
 
         {/* EMBEDDED STRIPE CHECKOUT */}
-        {showCheckout && selected && paymentMethod === "card" && (
+        {showCheckout && selected && (
           <div className="mt-8 border border-border bg-card p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="eyebrow text-muted-foreground text-xs">Secure checkout</div>
@@ -440,7 +436,8 @@ export default function Buy() {
               amountCents={currentPriceCents}
               customerName={name}
               customerEmail={email}
-              shippingAddress={address}
+              shippingAddress={shippingAddress}
+              notes={orderNotes || undefined}
               returnUrl={`${window.location.origin}/order-success`}
             />
           </div>

@@ -28,14 +28,29 @@ export default function Buy() {
   const [size, setSize] = useState(FINISHES[0].sizes[0].label);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "wire">("card");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [stateRegion, setStateRegion] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+  const [question, setQuestion] = useState("");
   const [signed, setSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
   const basePriceCents = priceFor(finish, size);
   const currentPriceCents = basePriceCents + (signed ? SIGNATURE_SURCHARGE_CENTS : 0);
+  const shippingAddress = [
+    addressLine1.trim(),
+    addressLine2.trim(),
+    `${city.trim()}, ${stateRegion.trim()} ${postalCode.trim()}`.trim(),
+    country.trim(),
+  ].filter(Boolean).join("\n");
+  const orderNotes = [
+    signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
+    question.trim() ? `Customer question/notes: ${question.trim()}` : null,
+  ].filter(Boolean).join("\n");
 
   const jumpToSection = (section: HTMLElement | null) => {
     if (!section) return;
@@ -89,35 +104,8 @@ export default function Buy() {
       toast.error("Choose a piece first.");
       return;
     }
-    if (paymentMethod === "card") {
-      // Open Embedded Checkout — the form mounts and creates the session itself.
-      setShowCheckout(true);
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.functions.invoke("submit-wire-order", {
-        body: {
-          paintingId: selected.id,
-          paintingTitle: signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title,
-          finish,
-          size,
-          amountCents: currentPriceCents,
-          customerName: name,
-          customerEmail: email,
-          shippingAddress: address,
-          notes: signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
-        },
-      });
-      if (error) throw error;
-      toast.success("Order received. The studio will email an invoice within 24 hours.");
-      setName(""); setEmail(""); setAddress(""); setSelected(null); setSigned(false);
-    } catch (err) {
-      console.error(err);
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setSubmitting(false);
-    }
+    // Open Embedded Checkout — the form mounts and creates the session itself.
+    setShowCheckout(true);
   };
 
   return (
@@ -323,49 +311,56 @@ export default function Buy() {
             placeholder="Email"
             className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
           />
-          <textarea
+          <input
             required
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            value={addressLine1}
+            onChange={(e) => setAddressLine1(e.target.value)}
+            placeholder="Street address"
+            className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+          />
+          <input
+            value={addressLine2}
+            onChange={(e) => setAddressLine2(e.target.value)}
+            placeholder="Apartment, suite, unit, etc."
+            className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+          />
+          <div className="grid md:grid-cols-3 gap-4">
+            <input
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="City"
+              className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+            />
+            <input
+              required
+              value={stateRegion}
+              onChange={(e) => setStateRegion(e.target.value)}
+              placeholder="State"
+              className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+            />
+            <input
+              required
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              placeholder="ZIP code"
+              className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+            />
+          </div>
+          <input
+            required
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="Country"
+            className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink"
+          />
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
             rows={4}
-            placeholder="Shipping address"
+            placeholder="Question or special instructions"
             className="w-full bg-transparent border border-border px-4 py-3 focus:outline-none focus:border-ink resize-none"
           />
-
-          {/* PAYMENT METHOD */}
-          <div className="pt-2">
-            <div className="eyebrow text-muted-foreground mb-3 text-xs">Payment method</div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("card")}
-                className={`text-left p-4 border-2 transition-all ${
-                  paymentMethod === "card"
-                    ? "border-gold-deep bg-card shadow-frame"
-                    : "border-border hover:border-ink"
-                }`}
-              >
-                <div className="font-serif text-lg">Pay with card</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Card authorized now. Charged only after the studio approves your order.
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod("wire")}
-                className={`text-left p-4 border-2 transition-all ${
-                  paymentMethod === "wire"
-                    ? "border-gold-deep bg-card shadow-frame"
-                    : "border-border hover:border-ink"
-                }`}
-              >
-                <div className="font-serif text-lg">Wire / bank transfer</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  We'll review and email an invoice with wire details within 24 hours.
-                </div>
-              </button>
-            </div>
-          </div>
 
           {/* SIGNATURE ADD-ON — exclusive, opt-in mark of authenticity */}
           <div className="pt-2">
@@ -413,19 +408,15 @@ export default function Buy() {
               ? "Choose a piece first"
               : submitting
                 ? "Processing…"
-                : paymentMethod === "card"
-                  ? `Continue to secure checkout · ${formatPrice(currentPriceCents)}`
-                  : `Request invoice · ${formatPrice(currentPriceCents)}`}
+                : `Continue to secure checkout · ${formatPrice(currentPriceCents)}`}
           </button>
           <p className="text-xs text-muted-foreground text-center">
-            {paymentMethod === "card"
-              ? "Secure card authorization via Stripe. The studio reviews and matches the best print partner before your card is charged."
-              : "No payment is taken now. The studio sends wire instructions after reviewing your order."}
+            Secure card authorization via Stripe. The studio reviews and matches the best print partner before your card is charged.
           </p>
         </form>
 
         {/* EMBEDDED STRIPE CHECKOUT */}
-        {showCheckout && selected && paymentMethod === "card" && (
+        {showCheckout && selected && (
           <div className="mt-8 border border-border bg-card p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="eyebrow text-muted-foreground text-xs">Secure checkout</div>
@@ -445,7 +436,8 @@ export default function Buy() {
               amountCents={currentPriceCents}
               customerName={name}
               customerEmail={email}
-              shippingAddress={address}
+              shippingAddress={shippingAddress}
+              notes={orderNotes || undefined}
               returnUrl={`${window.location.origin}/order-success`}
             />
           </div>

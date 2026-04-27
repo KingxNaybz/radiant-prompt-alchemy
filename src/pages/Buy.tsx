@@ -28,14 +28,29 @@ export default function Buy() {
   const [size, setSize] = useState(FINISHES[0].sizes[0].label);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "wire">("card");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [stateRegion, setStateRegion] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+  const [question, setQuestion] = useState("");
   const [signed, setSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
   const basePriceCents = priceFor(finish, size);
   const currentPriceCents = basePriceCents + (signed ? SIGNATURE_SURCHARGE_CENTS : 0);
+  const shippingAddress = [
+    addressLine1.trim(),
+    addressLine2.trim(),
+    `${city.trim()}, ${stateRegion.trim()} ${postalCode.trim()}`.trim(),
+    country.trim(),
+  ].filter(Boolean).join("\n");
+  const orderNotes = [
+    signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
+    question.trim() ? `Customer question/notes: ${question.trim()}` : null,
+  ].filter(Boolean).join("\n");
 
   const jumpToSection = (section: HTMLElement | null) => {
     if (!section) return;
@@ -89,35 +104,8 @@ export default function Buy() {
       toast.error("Choose a piece first.");
       return;
     }
-    if (paymentMethod === "card") {
-      // Open Embedded Checkout — the form mounts and creates the session itself.
-      setShowCheckout(true);
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.functions.invoke("submit-wire-order", {
-        body: {
-          paintingId: selected.id,
-          paintingTitle: signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title,
-          finish,
-          size,
-          amountCents: currentPriceCents,
-          customerName: name,
-          customerEmail: email,
-          shippingAddress: address,
-          notes: signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
-        },
-      });
-      if (error) throw error;
-      toast.success("Order received. The studio will email an invoice within 24 hours.");
-      setName(""); setEmail(""); setAddress(""); setSelected(null); setSigned(false);
-    } catch (err) {
-      console.error(err);
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setSubmitting(false);
-    }
+    // Open Embedded Checkout — the form mounts and creates the session itself.
+    setShowCheckout(true);
   };
 
   return (

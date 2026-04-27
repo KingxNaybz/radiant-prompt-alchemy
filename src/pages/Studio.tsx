@@ -11,7 +11,7 @@ const STYLES = [
   "Hyper-Real Photography",
   "Surreal Dreamscape",
   "Editorial Fashion",
-  "Cinematic Noir",
+  "Cinematic Elegance",
   "Abstract Expressionism",
   "Wildlife Macro",
 ];
@@ -235,7 +235,7 @@ function CreateTab({ cats, onDone, setError }: { cats: Category[]; onDone: () =>
       <div className="lg:col-span-5 space-y-3 border border-border p-6 bg-card">
           <div className="eyebrow text-muted-foreground">New original</div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Standard direction: absolute matte blacks, blinding chiaroscuro highlights, sculpted impasto texture, and emotionally charged form.
+            Standard direction: elegant black accents, warm luminous light, sculpted impasto texture, and uplifting gallery presence.
           </p>
         <div className="border border-border bg-secondary/30 p-3 space-y-2">
           <div className="eyebrow text-[0.65rem] text-gold-deep">Crib-style presets (one click)</div>
@@ -547,7 +547,7 @@ function InspireTab({ cats, onDone }: { cats: Category[]; onDone: () => void; })
         <div className="flex gap-2">
           <input value={query} onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && search()}
-            placeholder="e.g. moody NBA portraits, golden hour wildlife…"
+            placeholder="e.g. elegant NBA portraits, golden hour wildlife…"
             className="flex-1 bg-transparent border border-border p-3 focus:outline-none focus:border-ink" />
           <button onClick={search} disabled={loading}
             className="border border-ink eyebrow px-5 hover:bg-ink hover:text-paper transition-colors disabled:opacity-60">
@@ -957,7 +957,7 @@ function MassProduceTab({ cats, onDone }: { cats: Category[]; onDone: () => void
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. Moody black-and-white portraits of jazz musicians with smoke and gold accents, vertical orientation, painterly oil texture."
+            placeholder="e.g. Elegant black-and-white portraits of jazz musicians with warm gold accents, vertical orientation, painterly oil texture."
             rows={3}
             className="w-full bg-transparent border border-border p-2.5 mt-1 focus:outline-none focus:border-ink text-sm resize-y"
           />
@@ -1280,7 +1280,7 @@ function ComicTab({ cats, onDone, setError }: { cats: Category[]; onDone: () => 
         <div>
           <div className="eyebrow text-muted-foreground mb-1">Comic mode · Cinematic original-character realism</div>
           <p className="text-sm text-muted-foreground">
-            Original characters, painted comic realism, dramatic chiaroscuro, and cleaner page layouts for more reliable generation. Output lands in Pending for approval.
+            Original characters, painted comic realism, clean luminous contrast, and cleaner page layouts for more reliable generation. Output lands in Pending for approval.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-4">

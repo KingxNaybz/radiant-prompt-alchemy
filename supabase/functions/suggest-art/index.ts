@@ -25,7 +25,7 @@ const PRESET_DIRECTIONS: Record<string, string> = {
   high_gloss: "Social Culture Art best-seller energy: high-gloss acrylic / resin wall print look, mirror-like surface, ultra-saturated color, painterly impasto under glass.",
 };
 
-const HOUSE_STYLE = "Velour Walls house style: engineer absolute matte shadows with deep charcoals and pitch blacks, then carve blinding luminous highlights through aggressive chiaroscuro. Build visible impasto ridges, palette-knife structure, scraped paint, and tactile surface drama that catches real room light. Portraits must feel psychologically alive with hyper-real micro-expression detail; abstracts must balance brutal blocks of color with raw looping linework and emotionally charged brush velocity. Every piece should feel like an architectural window into an emotional state.";
+const HOUSE_STYLE = "Velour Walls house style: use black as a refined luxury accent, not a sinister mood. Keep the imagery warm, elegant, soulful, aspirational, and sellable; avoid evil, horror, occult, menacing, demonic, gothic, oppressive, or bleak visual language. Shape rich blacks with luminous gallery light, gold warmth, tactile impasto ridges, palette-knife structure, scraped paint, and surface texture that catches real room light. Portraits must feel dignified and alive with hyper-real micro-expression detail; abstracts must balance confident color blocks with graceful linework and emotionally uplifting brush velocity. Every piece should feel like an architectural window into beauty and strength, not darkness.";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -117,7 +117,7 @@ Return ONLY a JSON array, no prose. Schema:
     for (const idea of ideas.slice(0, count)) {
       try {
         const ar = idea.aspect_ratio ?? "1:1";
-        const finalPrompt = `${idea.prompt}\n\nStyle: ${idea.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, dramatic lighting, painterly textures, aspect ratio ${ar}.`;
+        const finalPrompt = `${idea.prompt}\n\nStyle: ${idea.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, warm luminous lighting, painterly textures, aspect ratio ${ar}.`;
         const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },

@@ -46,7 +46,7 @@ interface PaintBody {
 
 const STYLE_PRESETS: Record<string, string> = {
   african_royalty:
-    "Regal African subject in profile or three-quarter view, ornate beaded headwrap with real gold leaf accents, deep matte black skin rendered with luminous highlights, ceremonial gold jewelry, raw textured background of weathered parchment and gold flake. Mixed-media gallery painting, palette knife strokes, gold-leaf inlay, museum quality.",
+    "Regal African subject in profile or three-quarter view, ornate beaded headwrap with real gold leaf accents, rich black and brown tones rendered with warm luminous highlights, ceremonial gold jewelry, refined textured background of weathered parchment and gold flake. Mixed-media gallery painting, palette knife strokes, gold-leaf inlay, museum quality.",
   chrome_metallic:
     "Liquid chrome and brushed gold abstract composition, sweeping painterly waves of metallic pigment over a soft cloudy background, dramatic side-lighting catching every ridge of impasto, white feather-like wisps drifting through molten gold. Resin-finished, ultra glossy, contemporary luxury wall art.",
   motivational:
@@ -54,13 +54,13 @@ const STYLE_PRESETS: Record<string, string> = {
   graffiti:
     "Raw urban canvas painting: dripping spray-paint, layered stencils, torn poster textures, bold tag lettering, gold leaf splatter over weathered brick. Banksy-meets-Basquiat energy, high-contrast, gallery-grade graffiti fine art.",
   abstract_ocean:
-    "Abstract aerial seascape: golden molten waves crashing into deep navy and teal, generous palette-knife impasto, real gold-leaf foam, sun catching peaks of paint. Painterly, museum-grade, dramatic chiaroscuro.",
+    "Abstract aerial seascape: golden molten waves crashing into rich navy and teal, generous palette-knife impasto, real gold-leaf foam, sun catching peaks of paint. Painterly, museum-grade, luminous contrast.",
   modern_statement:
     "Bold contemporary statement piece for a luxury living room, oversized scale energy, single striking subject, high-contrast palette of black + ivory + gold accents, layered mixed-media textures, refined gallery composition.",
   comic_marvel:
     "Modern cinematic comic illustration: photoreal anatomy, dramatic rim lighting, painted color rendering, subtle ink lines, cinematic composition, hyper-detailed costume textures, atmospheric background, dynamic action pose.",
   high_gloss:
-    "Social-Culture-Art / Crib-of-Art-style HIGH-GLOSS ACRYLIC PRINT: ultra-saturated photoreal subject (legends, money, cars, sports icons, motivational typography or street-culture motifs) rendered as if printed on thick crystal-clear acrylic with a mirror-like resin finish. Bold isometric / 3D layered depth, crisp drop shadows, neon-on-dark color pops, glossy reflections catching gallery lighting, sharp typographic accents in chrome / gold / iced-out diamond, premium luxury wall-art presentation.",
+    "Social-Culture-Art / Crib-of-Art-style HIGH-GLOSS ACRYLIC PRINT: ultra-saturated photoreal subject (legends, money, cars, sports icons, motivational typography or street-culture motifs) rendered as if printed on thick crystal-clear acrylic with a mirror-like resin finish. Bold isometric / 3D layered depth, crisp refined shadows, vivid color pops on elegant black accents, glossy reflections catching gallery lighting, sharp typographic accents in chrome / gold / iced-out diamond, premium luxury wall-art presentation.",
 };
 
 const COMIC_LAYOUTS: Record<string, string> = {
@@ -76,7 +76,7 @@ const COMIC_LAYOUTS: Record<string, string> = {
     "A classic 6-panel comic page (3 rows × 2 columns), uniform panels, clean white gutters ~12px, thin black borders.",
 };
 
-const HOUSE_STYLE = "Velour Walls house style: engineer absolute matte shadows with deep charcoals and pitch blacks, then carve blinding luminous highlights through aggressive chiaroscuro. Build visible impasto ridges, palette-knife structure, scraped paint, and tactile surface drama that catches real room light. Portraits must feel psychologically alive with hyper-real micro-expression detail; abstracts must balance brutal blocks of color with raw looping linework and emotionally charged brush velocity. The final artwork should feel like an architectural window into an emotional state, not a flat picture.";
+const HOUSE_STYLE = "Velour Walls house style: use black as a refined luxury accent, not a sinister mood. Keep the imagery warm, elegant, soulful, aspirational, and sellable; avoid evil, horror, occult, menacing, demonic, gothic, oppressive, or bleak visual language. Shape rich blacks with luminous gallery light, gold warmth, tactile impasto ridges, palette-knife structure, scraped paint, and surface texture that catches real room light. Portraits must feel dignified and alive with hyper-real micro-expression detail; abstracts must balance confident color blocks with graceful linework and emotionally uplifting brush velocity. The final artwork should feel like an architectural window into beauty and strength, not darkness.";
 
 const COMIC_IP_PATTERN = /\b(wolverine|marvel|x-men|avengers|deadpool|spider[- ]?man|venom|batman|joker|superman|iron man|captain america|hulk)\b/i;
 
@@ -526,7 +526,7 @@ Deno.serve(async (req) => {
         ? `\n\nPanel script (render each beat in its own panel, in reading order left→right, top→bottom):\n${body.comic_script}`
         : "";
       finalPrompt =
-`Create a high-end realistic comic page in a cinematic modern comic style. ${HOUSE_STYLE} Use original characters only, never branded heroes or franchise-specific likenesses. Keep anatomy powerful, lighting dramatic, silhouettes legible, and page composition easy for the image model to render.
+`Create a high-end realistic comic page in a cinematic modern comic style. ${HOUSE_STYLE} Use original characters only, never branded heroes or franchise-specific likenesses. Keep anatomy powerful, lighting luminous, silhouettes legible, and page composition easy for the image model to render.
 
 ${layoutBlock}
 
@@ -534,7 +534,7 @@ Story / scene: ${rewrittenPrompt}${scriptBlock}${affirmationBlock}${presetBlock}
 
 Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be minimal, crisp, and sparse. If no dialogue is given, render the page silent (no text). Favor clear panel storytelling over excessive detail. Aspect ratio ${aspectRatio}, cohesive color palette across all panels.`;
     } else {
-      finalPrompt = `${rewrittenPrompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+      finalPrompt = `${rewrittenPrompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, warm luminous lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
     }
 
     let categoryId: string | null = body.category_id ?? null;
@@ -602,7 +602,7 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       }
 
       if (!dataUrl) {
-        const simplifiedPrompt = `Restyle the source image into one clear, high-end finished artwork. Preserve the main subject, simplify the composition, remove any text or layout elements, and render it in ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Focus on one visually coherent scene with strong light, tactile paint texture, and no captions or extra graphic elements. Aspect ratio ${aspectRatio}.`;
+        const simplifiedPrompt = `Restyle the source image into one clear, high-end finished artwork. Preserve the main subject, simplify the composition, remove any text or layout elements, and render it in ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Focus on one visually coherent scene with warm luminous light, tactile paint texture, and no captions or extra graphic elements. Aspect ratio ${aspectRatio}.`;
         for (const simplifiedModel of ["google/gemini-3.1-flash-image-preview", "google/gemini-2.5-flash-image"]) {
           const retry = await callRemixModel(simplifiedModel, simplifiedPrompt);
           if (!retry.ok) {

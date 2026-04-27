@@ -526,7 +526,7 @@ Deno.serve(async (req) => {
         ? `\n\nPanel script (render each beat in its own panel, in reading order left→right, top→bottom):\n${body.comic_script}`
         : "";
       finalPrompt =
-`Create a high-end realistic comic page in a cinematic modern comic style. ${HOUSE_STYLE} Use original characters only, never branded heroes or franchise-specific likenesses. Keep anatomy powerful, lighting dramatic, silhouettes legible, and page composition easy for the image model to render.
+`Create a high-end realistic comic page in a cinematic modern comic style. ${HOUSE_STYLE} Use original characters only, never branded heroes or franchise-specific likenesses. Keep anatomy powerful, lighting luminous, silhouettes legible, and page composition easy for the image model to render.
 
 ${layoutBlock}
 
@@ -534,7 +534,7 @@ Story / scene: ${rewrittenPrompt}${scriptBlock}${affirmationBlock}${presetBlock}
 
 Render speech bubbles and caption boxes ONLY where the script explicitly indicates dialogue or narration; lettering must be minimal, crisp, and sparse. If no dialogue is given, render the page silent (no text). Favor clear panel storytelling over excessive detail. Aspect ratio ${aspectRatio}, cohesive color palette across all panels.`;
     } else {
-      finalPrompt = `${rewrittenPrompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, dramatic lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
+      finalPrompt = `${rewrittenPrompt}${presetBlock}${affirmationBlock}${finishBlock}\n\nStyle: ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Hyper-realistic, museum-grade fine art, warm luminous lighting, painterly textures, masterpiece composition, aspect ratio ${aspectRatio}.`;
     }
 
     let categoryId: string | null = body.category_id ?? null;
@@ -602,7 +602,7 @@ Render speech bubbles and caption boxes ONLY where the script explicitly indicat
       }
 
       if (!dataUrl) {
-        const simplifiedPrompt = `Restyle the source image into one clear, high-end finished artwork. Preserve the main subject, simplify the composition, remove any text or layout elements, and render it in ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Focus on one visually coherent scene with strong light, tactile paint texture, and no captions or extra graphic elements. Aspect ratio ${aspectRatio}.`;
+        const simplifiedPrompt = `Restyle the source image into one clear, high-end finished artwork. Preserve the main subject, simplify the composition, remove any text or layout elements, and render it in ${body.style ?? "Velour Walls house style"}. ${HOUSE_STYLE} Focus on one visually coherent scene with warm luminous light, tactile paint texture, and no captions or extra graphic elements. Aspect ratio ${aspectRatio}.`;
         for (const simplifiedModel of ["google/gemini-3.1-flash-image-preview", "google/gemini-2.5-flash-image"]) {
           const retry = await callRemixModel(simplifiedModel, simplifiedPrompt);
           if (!retry.ok) {

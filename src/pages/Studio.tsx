@@ -702,7 +702,9 @@ function PendingTab({ works, cats, onChange }: { works: Painting[]; cats: Catego
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {works.map((p) => (
         <div key={p.id} className="border border-border bg-card overflow-hidden">
-          <img src={p.image_url} alt={p.title} className="w-full h-auto" />
+          <Link to={`/piece/${p.id}`} className="block group" title="View piece & room mockups">
+            <img src={p.image_url} alt={p.title} className="w-full h-auto transition-opacity group-hover:opacity-90" />
+          </Link>
           <div className="p-4 space-y-3">
             <TitleEditor painting={p} onSaved={onChange} />
             <DescriptionEditor painting={p} onSaved={onChange} />
@@ -790,11 +792,11 @@ function LibraryTab({ works, cats, onChange, onCatsChange }: {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {items.map((p) => (
                 <div key={p.id} className="border border-border bg-card overflow-hidden">
-                  <div className="relative">
-                    <img src={p.image_url} alt={p.title} className="w-full h-auto" />
+                  <Link to={`/piece/${p.id}`} className="relative block group" title="View piece & room mockups">
+                    <img src={p.image_url} alt={p.title} className="w-full h-auto transition-opacity group-hover:opacity-90" />
                     {!p.is_published && <span className="absolute top-3 left-3 eyebrow bg-ink text-paper px-2 py-1 text-[0.6rem]">Private</span>}
                     {p.auto_suggested && <span className="absolute top-3 right-3 eyebrow bg-gold-deep text-paper px-2 py-1 text-[0.6rem]">Suggested</span>}
-                  </div>
+                  </Link>
                   <div className="p-4 space-y-2">
                     <TitleEditor painting={p} onSaved={onChange} />
                     <DescriptionEditor painting={p} onSaved={onChange} />
@@ -853,7 +855,9 @@ function MarketplaceTab({ works, onChange }: { works: Painting[]; onChange: () =
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {published.map((p) => (
             <div key={p.id} className="border border-border bg-card overflow-hidden">
-              <img src={p.image_url} alt={p.title} className="w-full h-auto" />
+              <Link to={`/piece/${p.id}`} className="block group" title="View piece & room mockups">
+                <img src={p.image_url} alt={p.title} className="w-full h-auto transition-opacity group-hover:opacity-90" />
+              </Link>
               <div className="p-4 space-y-3">
                 <div className="font-serif text-lg truncate">{p.title}</div>
                 <div className="flex gap-2 text-[0.6rem]">

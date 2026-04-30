@@ -77,7 +77,7 @@ export default function Piece() {
   const views: GalleryView[] = useMemo(() => {
     if (!p) return [];
     return [
-      { key: "original", label: "Artwork", url: p.image_url, isOriginal: true },
+      { key: "original", label: "The Actual Print", url: p.image_url, isOriginal: true },
       ...mockups.map((m) => ({ key: m.key, label: m.label, url: m.url })),
     ];
   }, [p, mockups]);
@@ -117,6 +117,11 @@ export default function Piece() {
             {!activeView?.isOriginal && (
               <div className="absolute top-3 left-3 eyebrow text-[0.6rem] bg-paper/90 text-ink px-2 py-1">
                 In situ — {activeView?.label}
+              </div>
+            )}
+            {activeView?.isOriginal && (
+              <div className="absolute top-3 left-3 eyebrow text-[0.6rem] bg-gold-deep text-paper px-2 py-1">
+                The actual print you'll receive
               </div>
             )}
           </div>

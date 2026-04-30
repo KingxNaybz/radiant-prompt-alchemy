@@ -121,7 +121,6 @@ Deno.serve(async (req) => {
       .from("paintings")
       .select("id, image_url, room_mockups, owner_id")
       .eq("id", painting_id)
-      .eq("is_published", true)
       .maybeSingle();
     if (pErr) throw pErr;
     if (!painting) {

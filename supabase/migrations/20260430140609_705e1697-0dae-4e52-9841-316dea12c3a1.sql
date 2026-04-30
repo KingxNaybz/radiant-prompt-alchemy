@@ -1,0 +1,1 @@
+ALTER TABLE public.paintings ADD COLUMN IF NOT EXISTS room_mockups jsonb NOT NULL DEFAULT '[]'::jsonb;

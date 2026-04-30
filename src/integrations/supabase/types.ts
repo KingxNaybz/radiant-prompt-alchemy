@@ -201,6 +201,7 @@ export type Database = {
           price_cents: number | null
           prompt: string
           provider: string | null
+          room_mockups: Json
           source_image_url: string | null
           status: string
           style: string | null
@@ -226,6 +227,7 @@ export type Database = {
           price_cents?: number | null
           prompt: string
           provider?: string | null
+          room_mockups?: Json
           source_image_url?: string | null
           status?: string
           style?: string | null
@@ -251,6 +253,7 @@ export type Database = {
           price_cents?: number | null
           prompt?: string
           provider?: string | null
+          room_mockups?: Json
           source_image_url?: string | null
           status?: string
           style?: string | null

@@ -104,20 +104,29 @@ Deno.serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_ANON_KEY =
+      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const { painting_id } = await req.json();
-    if (!painting_id) {
+    if (typeof painting_id !== "string" || !/^[0-9a-f-]{36}$/i.test(painting_id)) {
       return new Response(JSON.stringify({ error: "painting_id required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const caller = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: authHeader ? { Authorization: authHeader } : {} },
+      auth: { persistSession: false },
+    });
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: painting, error: pErr } = await admin
+    // Read as the caller first so private owner pieces are visible through RLS,
+    // while unknown/private pieces still return "not found" to everyone else.
+    const { data: painting, error: pErr } = await caller
       .from("paintings")
       .select("id, image_url, room_mockups, owner_id")
       .eq("id", painting_id)

@@ -77,7 +77,7 @@ export default function Piece() {
   const views: GalleryView[] = useMemo(() => {
     if (!p) return [];
     return [
-      { key: "original", label: "Artwork", url: p.image_url, isOriginal: true },
+      { key: "original", label: "The Actual Print", url: p.image_url, isOriginal: true },
       ...mockups.map((m) => ({ key: m.key, label: m.label, url: m.url })),
     ];
   }, [p, mockups]);

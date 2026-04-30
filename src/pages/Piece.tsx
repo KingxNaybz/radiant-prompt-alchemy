@@ -32,7 +32,6 @@ export default function Piece() {
       .from("paintings")
       .select("*")
       .eq("id", id)
-      .eq("is_published", true)
       .maybeSingle()
       .then(({ data }) => {
         setP(data);

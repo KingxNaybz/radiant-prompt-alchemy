@@ -119,6 +119,11 @@ export default function Piece() {
                 In situ — {activeView?.label}
               </div>
             )}
+            {activeView?.isOriginal && (
+              <div className="absolute top-3 left-3 eyebrow text-[0.6rem] bg-gold-deep text-paper px-2 py-1">
+                The actual print you'll receive
+              </div>
+            )}
           </div>
 
           {/* Thumbnail gallery */}

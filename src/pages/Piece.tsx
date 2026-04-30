@@ -182,7 +182,7 @@ export default function Piece() {
           <div className="hairline my-8" />
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between"><dt className="text-muted-foreground">Format</dt><dd>{p.aspect_ratio}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted-foreground">Resolution</dt><dd>8K Ultra-Real</dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">Resolution</dt><dd>8K</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">Edition</dt><dd>Limited / Signed</dd></div>
           </dl>
           <div className="mt-8">

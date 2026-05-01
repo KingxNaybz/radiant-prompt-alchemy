@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
     }
 
     const sys = `You are an art director. Given a theme, output 6 unique fine-art concepts as a JSON array.
-Schema: [{"title":"...","prompt":"detailed visual description for an AI painter","style":"...","category_slug":"sports|abstract|nature|portrait|architecture|surreal|still-life|fantasy"}]
+Schema: [{"title":"...","prompt":"detailed visual description for an AI painter","style":"...","category_slug":"sports|cars|abstract|nature|animals|portrait|architecture|african-royalty|chrome-metallic|motivational|graffiti|abstract-ocean|modern-statement|surreal|comics|still-life|fantasy"}]
+Pick the single best-fitting category_slug for each idea from the list above. Bias toward variety across the set when the theme is broad.
 Return JSON only, no prose.`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

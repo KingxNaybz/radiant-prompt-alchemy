@@ -11,8 +11,8 @@ const HOUSE_STYLE_HINT =
 
 async function generateDescription(prompt: string, currentTitle: string, apiKey: string) {
   const sys =
-    "You write museum-grade gallery copy for Velour Walls. Return STRICT JSON {\"title\":string,\"description\":string}. Title: 2-5 evocative words (Title Case). Description: 60-110 words, present tense, sensory and emotional, no markdown, no quotes around the title in the description.";
-  const user = `Visual subject:\n${prompt.slice(0, 800)}\n\nCurrent title (may be generic): ${currentTitle}\nHouse style: ${HOUSE_STYLE_HINT}`;
+    "You write short, punchy gallery copy for Velour Walls. Return STRICT JSON {\"title\":string,\"description\":string}. Title: 2-5 evocative words (Title Case). Description: MAX 30 words, 1-2 sentences. Sensory, emotional, present tense. No markdown, no quotes, no lists. Hard cap: 30 words.";
+  const user = `Visual subject:\n${prompt.slice(0, 600)}\n\nCurrent title (may be generic): ${currentTitle}\nHouse style: ${HOUSE_STYLE_HINT}\n\nReminder: description must be 30 words or fewer.`;
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -29,9 +29,13 @@ async function generateDescription(prompt: string, currentTitle: string, apiKey:
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(content);
+  let description = typeof parsed.description === "string" ? parsed.description.trim() : "";
+  // Hard cap to ~30 words as a safety net
+  const words = description.split(/\s+/);
+  if (words.length > 32) description = words.slice(0, 30).join(" ").replace(/[,;:\-]+$/, "") + ".";
   return {
     title: typeof parsed.title === "string" ? parsed.title.trim() : "",
-    description: typeof parsed.description === "string" ? parsed.description.trim() : "",
+    description,
   };
 }
 
@@ -46,15 +50,33 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json().catch(() => ({}));
-    const limit = Math.min(Number(body.limit) || 10, 25);
+    const limit = Math.min(Number(body.limit) || 10, 50);
     const overwriteTitle = body.overwriteTitle === true;
+    const rewriteLong = body.rewriteLong === true;
+    const maxLen = Number(body.maxLen) || 220;
 
-    const { data: rows, error } = await admin
-      .from("paintings")
-      .select("id, title, prompt")
-      .or("description.is.null,description.eq.")
-      .limit(limit);
-    if (error) throw error;
+    let rows: any[] = [];
+    if (rewriteLong) {
+      const { data, error: e2 } = await admin
+        .from("paintings")
+        .select("id, title, prompt, description")
+        .limit(500);
+      if (e2) {
+        console.error("rewriteLong query error:", e2);
+        throw e2;
+      }
+      console.log("rewriteLong total fetched:", data?.length);
+      rows = (data ?? []).filter((r: any) => (r.description?.length ?? 0) > maxLen).slice(0, limit);
+      console.log("rewriteLong after filter:", rows.length, "maxLen:", maxLen);
+    } else {
+      const { data, error: e2 } = await admin
+        .from("paintings")
+        .select("id, title, prompt, description")
+        .or("description.is.null,description.eq.")
+        .limit(limit);
+      if (e2) throw e2;
+      rows = data ?? [];
+    }
 
     const results: any[] = [];
     for (const row of rows ?? []) {

@@ -37,6 +37,17 @@ const STYLE_PRESETS: { key: string; label: string; blurb: string; cat?: string }
   { key: "graffiti",         label: "Graffiti",          blurb: "Drips, stencils, gold splatter, raw canvas",  cat: "graffiti" },
   { key: "abstract_ocean",   label: "Abstract Ocean",    blurb: "Aerial seascape, golden molten waves",        cat: "abstract-ocean" },
   { key: "modern_statement", label: "Modern Statement",  blurb: "Bold, ivory + black + gold accents",          cat: "modern-statement" },
+  { key: "sports",           label: "Sports",            blurb: "Athletes in motion, stadium light, gold leaf", cat: "sports" },
+  { key: "cars",             label: "Cars",              blurb: "Luxury automotive, chrome curves, showroom",  cat: "cars" },
+  { key: "abstract",         label: "Abstract",          blurb: "Gestural shapes, color fields, gold accents", cat: "abstract" },
+  { key: "nature",           label: "Nature",            blurb: "Landscapes, botanicals, golden hour light",   cat: "nature" },
+  { key: "animals",          label: "Animals",           blurb: "Majestic wildlife, regal poses, gilded fur",  cat: "animals" },
+  { key: "portrait",         label: "Portrait",          blurb: "Soulful faces, dramatic light, painterly",    cat: "portrait" },
+  { key: "architecture",     label: "Architecture",      blurb: "Iconic skylines, sacred geometry, brass",     cat: "architecture" },
+  { key: "surreal",          label: "Surreal",           blurb: "Dreamlike scenes, floating forms, gold mist", cat: "surreal" },
+  { key: "comics",           label: "Comics",            blurb: "Bold ink lines, halftone, pop-art panels",    cat: "comics" },
+  { key: "still_life",       label: "Still Life",        blurb: "Opulent objects, velvet, gilded vessels",     cat: "still-life" },
+  { key: "fantasy",          label: "Fantasy",           blurb: "Mythic figures, ethereal worlds, gold magic", cat: "fantasy" },
   { key: "high_gloss",       label: "High-Gloss Acrylic",blurb: "Social Culture Art mirror-resin best-seller look" },
 ];
 

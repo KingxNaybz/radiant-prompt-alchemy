@@ -11,7 +11,7 @@ const HOUSE_STYLE_HINT =
 
 async function generateDescription(prompt: string, currentTitle: string, apiKey: string) {
   const sys =
-    "You write museum-grade gallery copy for Velour Walls. Return STRICT JSON {\"title\":string,\"description\":string}. Title: 2-5 evocative words (Title Case). Description: 60-110 words, present tense, sensory and emotional, no markdown, no quotes around the title in the description.";
+    "You write punchy gallery copy for Velour Walls. Return STRICT JSON {\"title\":string,\"description\":string}. Title: 2-5 evocative words (Title Case). Description: 20-35 words, 1-2 short sentences, sensory and emotional, present tense, no markdown, no quotes.";
   const user = `Visual subject:\n${prompt.slice(0, 800)}\n\nCurrent title (may be generic): ${currentTitle}\nHouse style: ${HOUSE_STYLE_HINT}`;
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",

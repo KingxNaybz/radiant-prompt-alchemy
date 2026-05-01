@@ -55,14 +55,25 @@ Deno.serve(async (req) => {
     const rewriteLong = body.rewriteLong === true;
     const maxLen = Number(body.maxLen) || 220;
 
-    const query = admin.from("paintings").select("id, title, prompt, description").limit(limit);
-    const { data: allRows, error } = rewriteLong
-      ? await query
-      : await query.or("description.is.null,description.eq.");
-    if (error) throw error;
-    const rows = rewriteLong
-      ? (allRows ?? []).filter((r: any) => (r.description?.length ?? 0) > maxLen)
-      : allRows;
+    let rows: any[] = [];
+    if (rewriteLong) {
+      // Use server-side filter on character length
+      const { data, error: e2 } = await admin
+        .from("paintings")
+        .select("id, title, prompt, description")
+        .not("description", "is", null)
+        .limit(limit);
+      if (e2) throw e2;
+      rows = (data ?? []).filter((r: any) => (r.description?.length ?? 0) > maxLen).slice(0, limit);
+    } else {
+      const { data, error: e2 } = await admin
+        .from("paintings")
+        .select("id, title, prompt, description")
+        .or("description.is.null,description.eq.")
+        .limit(limit);
+      if (e2) throw e2;
+      rows = data ?? [];
+    }
 
     const results: any[] = [];
     for (const row of rows ?? []) {

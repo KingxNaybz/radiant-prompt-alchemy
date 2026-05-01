@@ -29,9 +29,13 @@ async function generateDescription(prompt: string, currentTitle: string, apiKey:
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(content);
+  let description = typeof parsed.description === "string" ? parsed.description.trim() : "";
+  // Hard cap to ~30 words as a safety net
+  const words = description.split(/\s+/);
+  if (words.length > 32) description = words.slice(0, 30).join(" ").replace(/[,;:\-]+$/, "") + ".";
   return {
     title: typeof parsed.title === "string" ? parsed.title.trim() : "",
-    description: typeof parsed.description === "string" ? parsed.description.trim() : "",
+    description,
   };
 }
 

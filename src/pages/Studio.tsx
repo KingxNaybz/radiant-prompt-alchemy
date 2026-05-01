@@ -1058,6 +1058,15 @@ const SUPPLIERS: Supplier[] = [
     api: "Manual order portal (no native POD API — fulfillment partner style)",
     bestFor: "Wholesale runs of best-sellers once a SKU proves out. Lowest unit cost on big sizes.",
   },
+  {
+    name: "CanvasChamp",
+    url: "https://www.canvaschamp.com/",
+    region: "USA, UK, AU, IN, CA",
+    blurb: "Budget-friendly canvas specialist that goes BIG — stretched canvas up to 54×100\". Handles oversized statement pieces other PODs can't.",
+    products: ["Stretched canvas (up to 54×100\")", "Framed canvas", "Acrylic", "Metal", "Photo prints"],
+    api: "Manual order portal + bulk/wholesale program (no native POD API)",
+    bestFor: "Oversized canvas (72×48\" and larger) for statement walls. Lowest cost on jumbo sizes.",
+  },
 ];
 
 /* ---------------- SUPPLIER QUICK-SUBMIT ---------------- */

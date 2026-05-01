@@ -63,7 +63,9 @@ Deno.serve(async (req) => {
         .not("description", "is", null)
         .limit(500);
       if (e2) throw e2;
+      console.log("rewriteLong fetched rows:", data?.length, "max len:", Math.max(0, ...(data ?? []).map((r: any) => r.description?.length ?? 0)));
       rows = (data ?? []).filter((r: any) => (r.description?.length ?? 0) > maxLen).slice(0, limit);
+      console.log("after filter rows:", rows.length);
     } else {
       const { data, error: e2 } = await admin
         .from("paintings")

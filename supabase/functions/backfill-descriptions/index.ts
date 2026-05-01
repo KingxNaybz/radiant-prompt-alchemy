@@ -57,12 +57,11 @@ Deno.serve(async (req) => {
 
     let rows: any[] = [];
     if (rewriteLong) {
-      // Use server-side filter on character length
       const { data, error: e2 } = await admin
         .from("paintings")
         .select("id, title, prompt, description")
         .not("description", "is", null)
-        .limit(limit);
+        .limit(500);
       if (e2) throw e2;
       rows = (data ?? []).filter((r: any) => (r.description?.length ?? 0) > maxLen).slice(0, limit);
     } else {

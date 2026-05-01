@@ -192,16 +192,22 @@ export default function Piece() {
             </div>
           </div>
 
-          <div className="mt-6 border border-border bg-card p-4">
-            <div className="eyebrow text-muted-foreground mb-3 text-[0.65rem]">Pricing by finish & size</div>
-            <div className="space-y-4 text-sm">
+          <details className="mt-6 border border-border bg-card group">
+            <summary className="flex justify-between items-center px-4 py-3 cursor-pointer list-none eyebrow text-[0.65rem] text-muted-foreground hover:text-ink transition-colors">
+              <span>Pricing by finish &amp; size</span>
+              <span className="text-gold-deep transition-transform group-open:rotate-180">▾</span>
+            </summary>
+            <div className="px-4 pb-4 space-y-4 text-sm">
               {FINISHES.map((f) => (
-                <div key={f.name}>
-                  <div className="flex justify-between items-baseline">
+                <details key={f.name} className="border-t border-border pt-3 group/finish">
+                  <summary className="flex justify-between items-baseline cursor-pointer list-none">
                     <div className="font-serif">{f.name}</div>
-                    <div className="eyebrow text-[0.6rem] text-gold-deep">{f.badge}</div>
-                  </div>
-                  <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span className="eyebrow text-[0.6rem] text-gold-deep">{f.badge}</span>
+                      <span className="text-xs text-muted-foreground transition-transform group-open/finish:rotate-180">▾</span>
+                    </div>
+                  </summary>
+                  <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
                     {f.sizes.map((s) => {
                       const price = Math.round(s.basePriceCents * f.multiplier);
                       return (
@@ -212,10 +218,10 @@ export default function Piece() {
                       );
                     })}
                   </ul>
-                </div>
+                </details>
               ))}
             </div>
-          </div>
+          </details>
           <Link
             to="/buy"
             className="mt-8 inline-block w-full text-center px-6 py-3.5 bg-ink text-paper eyebrow hover:bg-gold-deep transition-colors"

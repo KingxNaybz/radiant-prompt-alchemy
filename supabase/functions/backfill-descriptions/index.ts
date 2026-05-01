@@ -46,15 +46,19 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json().catch(() => ({}));
-    const limit = Math.min(Number(body.limit) || 10, 25);
+    const limit = Math.min(Number(body.limit) || 10, 50);
     const overwriteTitle = body.overwriteTitle === true;
+    const rewriteLong = body.rewriteLong === true;
+    const maxLen = Number(body.maxLen) || 220;
 
-    const { data: rows, error } = await admin
-      .from("paintings")
-      .select("id, title, prompt")
-      .or("description.is.null,description.eq.")
-      .limit(limit);
+    const query = admin.from("paintings").select("id, title, prompt, description").limit(limit);
+    const { data: allRows, error } = rewriteLong
+      ? await query
+      : await query.or("description.is.null,description.eq.");
     if (error) throw error;
+    const rows = rewriteLong
+      ? (allRows ?? []).filter((r: any) => (r.description?.length ?? 0) > maxLen)
+      : allRows;
 
     const results: any[] = [];
     for (const row of rows ?? []) {

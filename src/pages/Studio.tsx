@@ -1077,6 +1077,7 @@ const SUPPLIER_OPTIONS: { key: string; label: string; email: string }[] = [
   { key: "gooten",     label: "Gooten",     email: "hello@gooten.com" },
   { key: "printful",   label: "Printful",   email: "support@printful.com" },
   { key: "cnd",        label: "Canvas N Decor", email: "orders@canvasndecor.com" },
+  { key: "canvaschamp", label: "CanvasChamp", email: "support@canvaschamp.com" },
 ];
 
 function SupplierSubmit({ painting }: { painting: Painting }) {

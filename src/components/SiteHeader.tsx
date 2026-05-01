@@ -19,7 +19,6 @@ export default function SiteHeader() {
         <nav className="flex items-center gap-6 md:gap-8 text-sm">
           <Link to="/" className="hover:text-gold-deep transition-colors">Gallery</Link>
           <Link to="/buy" className="hover:text-gold-deep transition-colors">Buy Now</Link>
-          <Link to="/commission" className="hover:text-gold-deep transition-colors">Commission</Link>
           {isOwner && (
             <>
               <Link

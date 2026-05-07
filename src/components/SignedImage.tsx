@@ -22,7 +22,7 @@ export default function SignedImage({
         aria-hidden="true"
         className={`pointer-events-none select-none absolute bottom-1.5 right-2 font-serif italic text-[7px] md:text-[9px] tracking-wide text-white/70 mix-blend-difference drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] ${signatureClassName}`}
       >
-        Naybz
+        VW
       </span>
     </div>
   );

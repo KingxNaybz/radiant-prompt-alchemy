@@ -391,16 +391,16 @@ export default function Buy() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-serif text-lg">
-                    Hand-signed by <span className="italic">Naybz</span>
+                    Hand-signed by <span className="italic">the artist</span>
                   </div>
                   <span className="eyebrow text-gold-deep text-[0.6rem] whitespace-nowrap">
                     +{formatPrice(SIGNATURE_SURCHARGE_CENTS)}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                  Reserved for collectors. The artist's mark is added by hand on the
-                  lower-right of the finished piece — a quiet seal of authenticity that
-                  most prints will never carry. Off by default.
+                  A deliberate, personal mark of authenticity — signed by hand in
+                  archival ink on the lower right of the finished piece. Reserved for
+                  collectors who want the real thing. Off by default, because scarcity is the point.
                 </p>
               </div>
             </button>

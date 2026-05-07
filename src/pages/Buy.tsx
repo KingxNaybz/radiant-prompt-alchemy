@@ -49,7 +49,7 @@ export default function Buy() {
     country.trim(),
   ].filter(Boolean).join("\n");
   const orderNotes = [
-    signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
+    signed ? "Add-on: Hand-signed by the artist (+$45)" : null,
     question.trim() ? `Customer question/notes: ${question.trim()}` : null,
   ].filter(Boolean).join("\n");
 

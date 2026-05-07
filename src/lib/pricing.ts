@@ -29,28 +29,28 @@ const SIZES: SizeOption[] = [
 export const FINISHES: Finish[] = [
   {
     name: "Gallery Canvas",
-    desc: "Hand-stretched cotton canvas, museum-wrapped on a kiln-dried frame. Ready to hang.",
+    desc: "Hand-stretched on kiln-dried solid wood. Museum-wrapped edges, zero staples on the face — the way canvas was always meant to carry a painting. Ready to hang.",
     badge: "Bestseller",
     multiplier: 1,
     sizes: SIZES,
   },
   {
     name: "Tempered Glass",
-    desc: "UV-printed onto 6mm tempered glass with float mounts. Mirror-finish depth.",
+    desc: "UV-printed directly onto 6mm tempered glass with brushed aluminum standoffs. Impossible depth, mirror-sharp colour, and a piece that changes with the light in your room.",
     badge: "Premium",
     multiplier: 1.75,
     sizes: SIZES,
   },
   {
     name: "Acrylic Face-Mount",
-    desc: "1/4″ acrylic face-mount with dibond backing. Gallery-grade clarity.",
+    desc: "Printed face-first onto 1/4″ crystal-clear acrylic with rigid dibond backing. Colours reach a saturation you've never seen in a print — the museum standard.",
     badge: "Editor's pick",
     multiplier: 1.85,
     sizes: SIZES,
   },
 ];
 
-// Optional add-on: hand-signed by Naybz. Kept rare on purpose — the signature
+// Optional add-on: hand-signed by the artist. Kept rare on purpose — the signature
 // is the artist's mark of authenticity and only ships when explicitly chosen.
 export const SIGNATURE_SURCHARGE_CENTS = 4500;
 

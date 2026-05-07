@@ -56,12 +56,12 @@ export default function Index() {
           <div className="md:col-span-5">
             <div className="eyebrow text-muted-foreground mb-6">Vol. I — The Atelier</div>
             <h1 className="font-serif text-5xl md:text-7xl leading-[0.95] text-balance">
-              Directed by Naybz.<br />
-              <span className="italic text-gold-deep">Built to be remembered.</span>
+              Art you feel<br />
+              <span className="italic text-gold-deep">before you understand.</span>
             </h1>
             <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
               Velour Walls — hyper-real fine art on canvas, glass, and acrylic.
-              Each piece directed in the private atelier by Naybz, signed, and limited.
+              Hyper-real fine art on canvas, glass, and acrylic — each piece directed in our private atelier, signed, and limited.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link

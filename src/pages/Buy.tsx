@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
+import SEO from "@/components/SEO";
 import { toast } from "sonner";
 import { FINISHES, priceFor, formatPrice, startingPriceCents, SIGNATURE_SURCHARGE_CENTS } from "@/lib/pricing";
 import { StripeEmbeddedCheckoutForm } from "@/components/StripeEmbeddedCheckout";

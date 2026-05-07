@@ -6,7 +6,7 @@ interface SignedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
 }
 
 /**
- * Wraps a painting image with a discreet "Naybz" signature
+ * Wraps a painting image with a discreet "VW" signature
  * pinned to the bottom-right corner — small, low-opacity, but visible.
  */
 export default function SignedImage({

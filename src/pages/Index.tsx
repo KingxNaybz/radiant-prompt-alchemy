@@ -47,6 +47,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <SEO />
       <SiteHeader />
 
       {/* HERO — editorial cover */}

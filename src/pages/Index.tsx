@@ -26,7 +26,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Velour Walls — Art That Moves The Soul";
+    // Title set via SEO component
     Promise.all([
       supabase.from("paintings")
         .select("id,title,image_url,aspect_ratio,style,price_cents,category_id,created_at")

@@ -153,37 +153,37 @@ export default function Index() {
             <p>Pieces will be released here as they are completed.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-            {rest.map((p, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+            {rest.map((p) => (
               <Link
                 to={`/piece/${p.id}`}
                 key={p.id}
-                className={`group block ${i % 5 === 0 ? "lg:col-span-2" : ""}`}
+                className="group block"
               >
-                <div className="overflow-hidden shadow-frame mb-5 bg-secondary">
+                <div className="overflow-hidden shadow-frame mb-4 bg-secondary">
                   <SignedImage
                     src={p.image_url}
                     alt={p.title}
-                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    className="w-full aspect-[3/4] object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                     loading="lazy"
                   />
                 </div>
-                <div className="flex justify-between items-baseline">
-                  <div>
-                    <div className="font-serif text-xl">{p.title}</div>
-                    {p.style && (
-                      <div className="eyebrow text-muted-foreground mt-1">{p.style}</div>
+                <div className="h-14 flex flex-col justify-between">
+                  <div className="font-serif text-base leading-tight truncate">{p.title}</div>
+                  <div className="flex items-baseline justify-between gap-2 mt-1">
+                    {p.style ? (
+                      <div className="eyebrow text-muted-foreground truncate text-[0.6rem]">{p.style}</div>
+                    ) : <span />}
+                    {p.price_cents != null ? (
+                      <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
+                        ${(p.price_cents / 100).toLocaleString()}
+                      </div>
+                    ) : (
+                      <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
+                        from {formatPrice(startingPriceCents)}
+                      </div>
                     )}
                   </div>
-                  {p.price_cents != null ? (
-                    <div className="font-serif text-lg text-gold-deep">
-                      ${(p.price_cents / 100).toLocaleString()}
-                    </div>
-                  ) : (
-                    <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
-                      from {formatPrice(startingPriceCents)}
-                    </div>
-                  )}
                 </div>
               </Link>
             ))}

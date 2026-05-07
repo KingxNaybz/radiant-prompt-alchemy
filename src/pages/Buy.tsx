@@ -200,35 +200,37 @@ export default function Buy() {
                     setFinish(f.name);
                     setSize(f.sizes[0].label);
                   }}
-                  className={`text-left p-6 border-2 bg-card transition-all ${
+                  className={`text-left p-6 border-2 bg-card transition-all flex flex-col ${
                     active ? "border-gold-deep shadow-frame" : "border-border hover:border-ink"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="font-serif text-2xl">{f.name}</div>
                     <span className="eyebrow text-gold-deep text-[0.6rem]">{f.badge}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">{f.desc}</p>
-                  <div className="eyebrow text-xs text-muted-foreground mb-2">
-                    From <span className="text-gold-deep">{formatPrice(fromCents)}</span>
+                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">{f.desc}</p>
+                  <div className="mt-auto">
+                    <div className="eyebrow text-xs text-muted-foreground mb-2">
+                      From <span className="text-gold-deep">{formatPrice(fromCents)}</span>
+                    </div>
+                    <ul className="space-y-1 text-sm">
+                      {f.sizes.map((s) => {
+                        const p = Math.round(s.basePriceCents * f.multiplier);
+                        const isActive = active && size === s.label;
+                        return (
+                          <li
+                            key={s.label}
+                            className={`hairline pt-2 flex justify-between ${
+                              isActive ? "text-gold-deep font-medium" : ""
+                            }`}
+                          >
+                            <span>{s.label}</span>
+                            <span>{formatPrice(p)}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
-                  <ul className="space-y-1 text-sm">
-                    {f.sizes.map((s) => {
-                      const p = Math.round(s.basePriceCents * f.multiplier);
-                      const isActive = active && size === s.label;
-                      return (
-                        <li
-                          key={s.label}
-                          className={`hairline pt-2 flex justify-between ${
-                            isActive ? "text-gold-deep font-medium" : ""
-                          }`}
-                        >
-                          <span>{s.label}</span>
-                          <span>{formatPrice(p)}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
                 </button>
               );
             })}

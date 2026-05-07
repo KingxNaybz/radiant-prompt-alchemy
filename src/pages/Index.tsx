@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
+import SEO from "@/components/SEO";
 import { formatPrice, startingPriceCents } from "@/lib/pricing";
 import { Link } from "react-router-dom";
 

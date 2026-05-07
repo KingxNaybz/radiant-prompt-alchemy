@@ -110,7 +110,7 @@ export default function Index() {
             "Art is not made to decorate walls.<br />
             It is made to move the soul."
           </p>
-          <div className="eyebrow text-paper/60 mt-8">— Naybz, Velour Walls</div>
+          <div className="eyebrow text-paper/60 mt-8">— Velour Walls</div>
         </div>
       </section>
 

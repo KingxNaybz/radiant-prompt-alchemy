@@ -175,7 +175,7 @@ export default function Piece() {
 
           <p className="eyebrow text-muted-foreground text-[0.65rem] mt-3">
             See it in your space — every piece is shown in three real-room settings.{" "}
-            <span className="text-gold-deep">Hand-signed by Naybz</span> available at checkout.
+            <span className="text-gold-deep">Hand-signed by the artist</span> available at checkout.
           </p>
         </div>
         <aside className="md:col-span-4 md:sticky md:top-28 self-start">

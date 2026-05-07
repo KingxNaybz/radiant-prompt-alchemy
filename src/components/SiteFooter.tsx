@@ -9,8 +9,9 @@ export default function SiteFooter() {
           <p className="eyebrow text-muted-foreground mt-2">Art That Moves The Soul</p>
         </div>
         <div className="text-sm text-muted-foreground leading-relaxed">
-          Original 8K hyper-real fine art. Each piece painted in our private atelier
-          and delivered as gallery-grade prints, canvas, glass, or acrylic finishes.
+          Each piece in the Velour Walls collection is directed frame by frame in our
+          private atelier — not generated, not mass-produced. 8K resolution, delivered as
+          gallery-grade canvas, glass, or acrylic finishes.
         </div>
         <div className="text-sm text-muted-foreground">
           <div className="eyebrow text-ink mb-3">Studio</div>

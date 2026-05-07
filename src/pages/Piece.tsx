@@ -105,6 +105,13 @@ export default function Piece() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <SEO
+        title={p.title}
+        description={p.description || `${p.title} — original fine art from Velour Walls. Available on canvas, glass, and acrylic.`}
+        image={p.image_url}
+        url={`https://velourwalls.art/piece/${p.id}`}
+        type="product"
+      />
       <SiteHeader />
       <article className="max-w-[1400px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-12 gap-12">
         <div className="md:col-span-8">

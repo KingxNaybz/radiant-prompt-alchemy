@@ -38,7 +38,7 @@ export default function Piece() {
         setP(data);
         setLoading(false);
         if (data) {
-          document.title = `${data.title} — Velour Walls`;
+          // Title set via SEO component
           const existing = Array.isArray((data as any).room_mockups)
             ? ((data as any).room_mockups as RoomMockup[])
             : [];

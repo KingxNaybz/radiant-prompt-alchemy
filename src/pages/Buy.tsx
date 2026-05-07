@@ -111,6 +111,11 @@ export default function Buy() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <SEO
+        title="Buy Now"
+        description="Original fine art printed on gallery-grade canvas, tempered glass, or acrylic. Pick a piece, choose your finish. Ships in 5–7 days."
+        url="https://velourwalls.art/buy"
+      />
       <PaymentTestModeBanner />
       <SiteHeader />
 

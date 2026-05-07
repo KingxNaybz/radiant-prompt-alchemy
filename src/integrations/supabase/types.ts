@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      commissions: {
+        Row: {
+          budget: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          preferred_size: string | null
+          room_description: string | null
+          status: string
+          timeline: string | null
+          vision: string
+        }
+        Insert: {
+          budget?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          preferred_size?: string | null
+          room_description?: string | null
+          status?: string
+          timeline?: string | null
+          vision: string
+        }
+        Update: {
+          budget?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          preferred_size?: string | null
+          room_description?: string | null
+          status?: string
+          timeline?: string | null
+          vision?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string

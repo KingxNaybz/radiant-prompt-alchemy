@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignedImage from "@/components/SignedImage";
+import SEO from "@/components/SEO";
 import { toast } from "sonner";
 import { FINISHES, priceFor, formatPrice, startingPriceCents, SIGNATURE_SURCHARGE_CENTS } from "@/lib/pricing";
 import { StripeEmbeddedCheckoutForm } from "@/components/StripeEmbeddedCheckout";
@@ -48,7 +49,7 @@ export default function Buy() {
     country.trim(),
   ].filter(Boolean).join("\n");
   const orderNotes = [
-    signed ? "Add-on: Hand-signed by Naybz (+$45)" : null,
+    signed ? "Add-on: Hand-signed by the artist (+$45)" : null,
     question.trim() ? `Customer question/notes: ${question.trim()}` : null,
   ].filter(Boolean).join("\n");
 
@@ -86,7 +87,7 @@ export default function Buy() {
   };
 
   useEffect(() => {
-    document.title = "Buy Now — Velour Walls";
+    // Title set via SEO component
     supabase
       .from("paintings")
       .select("id,title,image_url,aspect_ratio,style,price_cents")
@@ -110,6 +111,11 @@ export default function Buy() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <SEO
+        title="Buy Now"
+        description="Original fine art printed on gallery-grade canvas, tempered glass, or acrylic. Pick a piece, choose your finish. Ships in 5–7 days."
+        url="https://velourwalls.art/buy"
+      />
       <PaymentTestModeBanner />
       <SiteHeader />
 
@@ -385,16 +391,16 @@ export default function Buy() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-serif text-lg">
-                    Hand-signed by <span className="italic">Naybz</span>
+                    Hand-signed by <span className="italic">the artist</span>
                   </div>
                   <span className="eyebrow text-gold-deep text-[0.6rem] whitespace-nowrap">
                     +{formatPrice(SIGNATURE_SURCHARGE_CENTS)}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                  Reserved for collectors. The artist's mark is added by hand on the
-                  lower-right of the finished piece — a quiet seal of authenticity that
-                  most prints will never carry. Off by default.
+                  A deliberate, personal mark of authenticity — signed by hand in
+                  archival ink on the lower right of the finished piece. Reserved for
+                  collectors who want the real thing. Off by default, because scarcity is the point.
                 </p>
               </div>
             </button>
@@ -430,7 +436,7 @@ export default function Buy() {
             </div>
             <StripeEmbeddedCheckoutForm
               paintingId={selected.id}
-              paintingTitle={signed ? `${selected.title} (Hand-signed by Naybz)` : selected.title}
+              paintingTitle={signed ? `${selected.title} (Hand-signed by the artist)` : selected.title}
               finish={finish}
               size={size}
               amountCents={currentPriceCents}

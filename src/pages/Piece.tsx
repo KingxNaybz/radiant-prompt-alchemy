@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import SEO from "@/components/SEO";
 import { FINISHES, formatPrice, startingPriceCents } from "@/lib/pricing";
 
 interface RoomMockup {
@@ -37,7 +38,7 @@ export default function Piece() {
         setP(data);
         setLoading(false);
         if (data) {
-          document.title = `${data.title} — Velour Walls`;
+          // Title set via SEO component
           const existing = Array.isArray((data as any).room_mockups)
             ? ((data as any).room_mockups as RoomMockup[])
             : [];
@@ -104,6 +105,13 @@ export default function Piece() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      <SEO
+        title={p.title}
+        description={p.description || `${p.title} — original fine art from Velour Walls. Available on canvas, glass, and acrylic.`}
+        image={p.image_url}
+        url={`https://velourwalls.art/piece/${p.id}`}
+        type="product"
+      />
       <SiteHeader />
       <article className="max-w-[1400px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-12 gap-12">
         <div className="md:col-span-8">
@@ -167,7 +175,7 @@ export default function Piece() {
 
           <p className="eyebrow text-muted-foreground text-[0.65rem] mt-3">
             See it in your space — every piece is shown in three real-room settings.{" "}
-            <span className="text-gold-deep">Hand-signed by Naybz</span> available at checkout.
+            <span className="text-gold-deep">Hand-signed by the artist</span> available at checkout.
           </p>
         </div>
         <aside className="md:col-span-4 md:sticky md:top-28 self-start">

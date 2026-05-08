@@ -225,7 +225,7 @@ async function generateTitleAndDescription(
           {
             role: "system",
             content:
-              "You write gallery copy for Velour Walls, a luxury fine-art studio. From the user's visual prompt, produce a poetic 2–5 word title and a single evocative paragraph (60–110 words) describing the artwork's mood, lighting, texture, and emotional pull. No emoji, no hashtags, no quotes around the title.",
+              "You write gallery copy for Velour Walls, a luxury fine-art studio. From the user's visual prompt, produce a poetic 2–5 word title and a short description of 2–3 sentences (20–30 words max) capturing the artwork's mood, texture, and emotional pull. Be evocative and concise — every word must earn its place. No emoji, no hashtags, no quotes around the title.",
           },
           { role: "user", content: visualPrompt },
         ],
@@ -239,7 +239,7 @@ async function generateTitleAndDescription(
                 type: "object",
                 properties: {
                   title: { type: "string", description: "2-5 word evocative title, no quotes." },
-                  description: { type: "string", description: "60-110 word gallery description." },
+                  description: { type: "string", description: "2-3 sentence gallery description, 20-30 words max." },
                 },
                 required: ["title", "description"],
                 additionalProperties: false,

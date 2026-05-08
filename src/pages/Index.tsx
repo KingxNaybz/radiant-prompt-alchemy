@@ -60,7 +60,6 @@ export default function Index() {
               <span className="italic text-gold-deep">before you understand.</span>
             </h1>
             <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-              Velour Walls — hyper-real fine art on canvas, glass, and acrylic.
               Hyper-real fine art on canvas, glass, and acrylic — each piece directed in our private atelier, signed, and limited.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
@@ -168,22 +167,17 @@ export default function Index() {
                     loading="lazy"
                   />
                 </div>
-                <div className="h-14 flex flex-col justify-between">
-                  <div className="font-serif text-base leading-tight truncate">{p.title}</div>
-                  <div className="flex items-baseline justify-between gap-2 mt-1">
-                    {p.style ? (
-                      <div className="eyebrow text-muted-foreground truncate text-[0.6rem]">{p.style}</div>
-                    ) : <span />}
-                    {p.price_cents != null ? (
-                      <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
-                        ${(p.price_cents / 100).toLocaleString()}
-                      </div>
-                    ) : (
-                      <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
-                        from {formatPrice(startingPriceCents)}
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-baseline justify-between gap-2 mt-3">
+                  <div className="font-serif text-sm leading-tight truncate">{p.title}</div>
+                  {p.price_cents != null ? (
+                    <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
+                      ${(p.price_cents / 100).toLocaleString()}
+                    </div>
+                  ) : (
+                    <div className="font-serif text-sm text-gold-deep whitespace-nowrap">
+                      from {formatPrice(startingPriceCents)}
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}

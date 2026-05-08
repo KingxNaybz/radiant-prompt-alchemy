@@ -29,21 +29,21 @@ const SIZES: SizeOption[] = [
 export const FINISHES: Finish[] = [
   {
     name: "Gallery Canvas",
-    desc: "Hand-stretched on kiln-dried solid wood. Museum-wrapped edges, zero staples on the face — the way canvas was always meant to carry a painting. Ready to hang.",
+    desc: "Museum-wrapped on solid wood. Zero staples. Ready to hang.",
     badge: "Bestseller",
     multiplier: 1,
     sizes: SIZES,
   },
   {
     name: "Tempered Glass",
-    desc: "UV-printed directly onto 6mm tempered glass with brushed aluminum standoffs. Impossible depth, mirror-sharp colour, and a piece that changes with the light in your room.",
+    desc: "6mm tempered glass with aluminum standoffs. Depth that shifts with light.",
     badge: "Premium",
     multiplier: 1.75,
     sizes: SIZES,
   },
   {
     name: "Acrylic Face-Mount",
-    desc: "Printed face-first onto 1/4″ crystal-clear acrylic with rigid dibond backing. Colours reach a saturation you've never seen in a print — the museum standard.",
+    desc: "Crystal-clear acrylic, dibond backing. Museum-standard saturation.",
     badge: "Editor's pick",
     multiplier: 1.85,
     sizes: SIZES,

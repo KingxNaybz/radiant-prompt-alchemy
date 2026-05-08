@@ -181,7 +181,6 @@ export default function Piece() {
         <aside className="md:col-span-4 md:sticky md:top-28 self-start">
           <div className="eyebrow text-muted-foreground mb-3">Original Work</div>
           <h1 className="font-serif text-4xl md:text-5xl leading-tight">{p.title}</h1>
-          {p.style && <div className="eyebrow text-gold-deep mt-4">{p.style}</div>}
           {p.description && (
             <p className="mt-6 text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
               {p.description}

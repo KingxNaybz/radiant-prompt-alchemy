@@ -13,6 +13,9 @@ import Piece from "./pages/Piece.tsx";
 import Buy from "./pages/Buy.tsx";
 import OrderSuccess from "./pages/OrderSuccess.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
+import Returns from "./pages/Returns.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import Shipping from "./pages/Shipping.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,9 @@ const App = () => (
           <Route path="/buy" element={<Buy />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/shipping" element={<Shipping />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

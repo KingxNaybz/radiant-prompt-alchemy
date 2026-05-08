@@ -60,7 +60,6 @@ export default function Index() {
               <span className="italic text-gold-deep">before you understand.</span>
             </h1>
             <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-              Velour Walls — hyper-real fine art on canvas, glass, and acrylic.
               Hyper-real fine art on canvas, glass, and acrylic — each piece directed in our private atelier, signed, and limited.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">

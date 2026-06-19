@@ -15,7 +15,7 @@ interface Painting {
   title: string;
   image_url: string;
   aspect_ratio: string;
-  style: string | null;
+  style?: string | null;
   price_cents: number | null;
 }
 

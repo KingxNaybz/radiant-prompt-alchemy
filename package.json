@@ -10,7 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "clean:vite": "node -e \"require('fs').rmSync('node_modules/.vite',{recursive:true,force:true})\"",
+    "predev": "npm run clean:vite",
+    "prebuild": "npm run clean:vite",
+    "prebuild:dev": "npm run clean:vite"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

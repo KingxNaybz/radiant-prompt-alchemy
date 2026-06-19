@@ -25,7 +25,7 @@ const OrderReceivedEmail = ({
 }: OrderReceivedProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>We've received your {SITE_NAME} order — currently in studio review</Preview>
+    <Preview>Your {SITE_NAME} order is confirmed — we're excited for your art journey</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={brand}>VELOUR WALLS</Heading>
@@ -34,9 +34,9 @@ const OrderReceivedEmail = ({
           {customerName ? `Thank you, ${customerName}.` : 'Thank you for your order.'}
         </Heading>
         <Text style={text}>
-          Your authorization has been received. Each piece is personally reviewed by the studio
-          before we capture payment and route to fulfillment — this ensures the highest quality
-          and that we partner with the supplier best suited to your piece.
+          We're so excited for your art journey and look forward to helping you turn your home
+          into a beautiful art gallery. Your order is confirmed — our studio is getting it
+          started in the back, ready to be shipped out to you.
         </Text>
 
         <Section style={card}>
@@ -48,8 +48,8 @@ const OrderReceivedEmail = ({
         </Section>
 
         <Text style={text}>
-          You will receive a second email once the studio finalizes your order and payment is captured,
-          followed by shipping details when your piece is on its way.
+          You'll receive another note from us when your piece ships, with tracking details so you
+          can follow it all the way to your wall. Thank you for letting us be part of your story.
         </Text>
 
         <Hr style={rule} />
@@ -61,7 +61,7 @@ const OrderReceivedEmail = ({
 
 export const template = {
   component: OrderReceivedEmail,
-  subject: 'Your Velour Walls order — in studio review',
+  subject: 'Your Velour Walls order is confirmed — welcome to your art journey',
   displayName: 'Order received (customer)',
   previewData: {
     customerName: 'Jordan',

@@ -441,7 +441,7 @@ export default function Buy() {
               paintingTitle={signed ? `${selected.title} (Hand-signed by the artist)` : selected.title}
               finish={finish}
               size={size}
-              amountCents={currentPriceCents}
+              signed={signed}
               customerName={name}
               customerEmail={email}
               shippingAddress={shippingAddress}

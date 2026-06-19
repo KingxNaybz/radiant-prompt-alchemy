@@ -2,6 +2,7 @@
 // Uses dynamic price_data because each painting/finish/size combo is unique.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
+import { computePriceCents } from "../_shared/pricing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +20,7 @@ Deno.serve(async (req) => {
       paintingTitle,
       finish,
       size,
-      amountCents,
+      signed,
       customerName,
       customerEmail,
       shippingAddress,
@@ -29,10 +30,9 @@ Deno.serve(async (req) => {
 
     if (
       !paintingTitle ||
-      !finish ||
-      !size ||
-      !Number.isInteger(amountCents) ||
-      amountCents < 50 ||
+      typeof finish !== "string" ||
+      typeof size !== "string" ||
+      typeof signed !== "boolean" ||
       !customerEmail ||
       !customerName ||
       !shippingAddress ||
@@ -40,6 +40,15 @@ Deno.serve(async (req) => {
       (environment !== "sandbox" && environment !== "live")
     ) {
       return new Response(JSON.stringify({ error: "Invalid request." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Server-authoritative price. Never trust any client-supplied amount.
+    const amountCents = computePriceCents(finish, size, signed);
+    if (amountCents === null) {
+      return new Response(JSON.stringify({ error: "Unknown finish or size." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

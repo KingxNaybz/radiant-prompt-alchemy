@@ -90,7 +90,7 @@ export default function Buy() {
     // Title set via SEO component
     supabase
       .from("paintings")
-      .select("id,title,image_url,aspect_ratio,style,price_cents")
+      .select("id,title,image_url,aspect_ratio,price_cents")
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => {

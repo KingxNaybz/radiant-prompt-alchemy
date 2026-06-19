@@ -170,6 +170,8 @@ export type Database = {
           created_at: string
           customer_email: string
           customer_name: string
+          dispute_reason: string | null
+          disputed_at: string | null
           finish: string
           id: string
           notes: string | null
@@ -177,6 +179,8 @@ export type Database = {
           painting_title: string
           payment_method: string
           payment_status: string
+          refunded_amount_cents: number
+          refunded_at: string | null
           shipping_address: string
           size: string
           stripe_payment_intent_id: string | null
@@ -188,6 +192,8 @@ export type Database = {
           created_at?: string
           customer_email: string
           customer_name: string
+          dispute_reason?: string | null
+          disputed_at?: string | null
           finish: string
           id?: string
           notes?: string | null
@@ -195,6 +201,8 @@ export type Database = {
           painting_title: string
           payment_method: string
           payment_status?: string
+          refunded_amount_cents?: number
+          refunded_at?: string | null
           shipping_address: string
           size: string
           stripe_payment_intent_id?: string | null
@@ -206,6 +214,8 @@ export type Database = {
           created_at?: string
           customer_email?: string
           customer_name?: string
+          dispute_reason?: string | null
+          disputed_at?: string | null
           finish?: string
           id?: string
           notes?: string | null
@@ -213,6 +223,8 @@ export type Database = {
           painting_title?: string
           payment_method?: string
           payment_status?: string
+          refunded_amount_cents?: number
+          refunded_at?: string | null
           shipping_address?: string
           size?: string
           stripe_payment_intent_id?: string | null
@@ -240,7 +252,10 @@ export type Database = {
           price_cents: number | null
           prompt: string
           provider: string | null
+          reserved_at: string | null
           room_mockups: Json
+          sold_at: string | null
+          sold_order_id: string | null
           source_image_url: string | null
           status: string
           style: string | null
@@ -266,7 +281,10 @@ export type Database = {
           price_cents?: number | null
           prompt: string
           provider?: string | null
+          reserved_at?: string | null
           room_mockups?: Json
+          sold_at?: string | null
+          sold_order_id?: string | null
           source_image_url?: string | null
           status?: string
           style?: string | null
@@ -292,7 +310,10 @@ export type Database = {
           price_cents?: number | null
           prompt?: string
           provider?: string | null
+          reserved_at?: string | null
           room_mockups?: Json
+          sold_at?: string | null
+          sold_order_id?: string | null
           source_image_url?: string | null
           status?: string
           style?: string | null
@@ -306,6 +327,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paintings_sold_order_id_fkey"
+            columns: ["sold_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]

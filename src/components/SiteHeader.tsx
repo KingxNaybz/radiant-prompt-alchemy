@@ -37,6 +37,14 @@ export default function SiteHeader() {
               >
                 Orders
               </Link>
+              <Link
+                to="/studio/payments"
+                className={`px-3 py-1.5 border border-ink text-ink hover:bg-ink hover:text-paper transition-colors eyebrow ${
+                  loc.pathname === "/studio/payments" ? "bg-ink text-paper" : ""
+                }`}
+              >
+                Payments
+              </Link>
             </>
           )}
           {!user ? (

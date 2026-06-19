@@ -31,7 +31,7 @@ export default function Piece() {
     if (!id) return;
     supabase
       .from("paintings")
-      .select("*")
+      .select("id,title,description,image_url,aspect_ratio,price_cents,category_id,tags,room_mockups,is_published,status,created_at")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {

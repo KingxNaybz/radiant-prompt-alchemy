@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean:vite": "rimraf node_modules/.vite",
+    "clean:vite": "node -e \"require('fs').rmSync('node_modules/.vite',{recursive:true,force:true})\"",
     "predev": "npm run clean:vite",
     "prebuild": "npm run clean:vite",
     "prebuild:dev": "npm run clean:vite"

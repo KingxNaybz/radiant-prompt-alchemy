@@ -39,24 +39,37 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Determine owner: either authed owner OR fall back to first owner row (cron path)
+    // Owner-only: this burns AI credits and writes paintings under the owner's account.
+    // Cron callers MUST use the service-role key (sets the special service_role JWT).
     let ownerId: string | null = null;
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const isServiceRole = token === SUPABASE_SERVICE_ROLE_KEY;
+    if (isServiceRole) {
+      // Trusted server-to-server (e.g. cron). Use first configured owner.
+      const { data: anyOwner } = await admin.from("user_roles")
+        .select("user_id").eq("role", "owner").limit(1).maybeSingle();
+      ownerId = anyOwner?.user_id ?? null;
+    } else {
       const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         global: { headers: { Authorization: authHeader } },
       });
       const { data: u } = await userClient.auth.getUser();
-      if (u?.user) {
-        const { data: r } = await admin.from("user_roles")
-          .select("user_id").eq("user_id", u.user.id).eq("role", "owner").maybeSingle();
-        if (r) ownerId = u.user.id;
+      if (!u?.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-    }
-    if (!ownerId) {
-      const { data: anyOwner } = await admin.from("user_roles")
-        .select("user_id").eq("role", "owner").limit(1).maybeSingle();
-      ownerId = anyOwner?.user_id ?? null;
+      const { data: r } = await admin.from("user_roles")
+        .select("user_id").eq("user_id", u.user.id).eq("role", "owner").maybeSingle();
+      if (!r) {
+        return new Response(JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      ownerId = u.user.id;
     }
     if (!ownerId) {
       return new Response(JSON.stringify({ error: "No owner configured." }),

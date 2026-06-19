@@ -7,7 +7,7 @@ export interface StripeEmbeddedCheckoutProps {
   paintingTitle: string;
   finish: string;
   size: string;
-  amountCents: number;
+  signed: boolean;
   customerName: string;
   customerEmail: string;
   shippingAddress: string;

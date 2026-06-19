@@ -12,7 +12,6 @@ interface Painting {
   title: string;
   image_url: string;
   aspect_ratio: string;
-  style: string | null;
   price_cents: number | null;
   category_id: string | null;
   created_at: string;
@@ -29,7 +28,7 @@ export default function Index() {
     // Title set via SEO component
     Promise.all([
       supabase.from("paintings")
-        .select("id,title,image_url,aspect_ratio,style,price_cents,category_id,created_at")
+        .select("id,title,image_url,aspect_ratio,price_cents,category_id,created_at")
         .eq("is_published", true).eq("status", "approved")
         .order("created_at", { ascending: false }),
       supabase.from("categories").select("*").order("sort_order"),

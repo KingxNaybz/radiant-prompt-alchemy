@@ -61,7 +61,7 @@ const OrderReceivedEmail = ({
 
 export const template = {
   component: OrderReceivedEmail,
-  subject: 'Your Velour Walls order — in studio review',
+  subject: 'Your Velour Walls order is confirmed — welcome to your art journey',
   displayName: 'Order received (customer)',
   previewData: {
     customerName: 'Jordan',

@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import Studio from "./pages/Studio.tsx";
 import StudioOrders from "./pages/StudioOrders.tsx";
+import StudioPayments from "./pages/StudioPayments.tsx";
 import Commission from "./pages/Commission.tsx";
 import Piece from "./pages/Piece.tsx";
 import Buy from "./pages/Buy.tsx";
